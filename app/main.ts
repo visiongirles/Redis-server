@@ -14,9 +14,9 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
   //   connection.write('+PONG\r\n');
   //   connection.pipe(connection);
 
-  connection.on('data', (socket: net.Socket) => {
-    socket.write('+PONG\r\n');
-    socket.pipe(socket);
+  connection.on('data', () => {
+    connection.write('+PONG\r\n');
+    connection.pipe(connection);
   });
 });
 

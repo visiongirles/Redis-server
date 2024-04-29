@@ -14,7 +14,9 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
   //   connection.write('+PONG\r\n');
   //   connection.pipe(connection);
 
-  connection.on('data', () => {
+  connection.on('data', (data) => {
+    console.log(`Received: ${data}`);
+
     connection.write('+PONG\r\n');
     // connection.pipe(connection);
   });

@@ -11,8 +11,13 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
     console.log('client disconnected');
   });
 
-  connection.write('+PONG\r\n');
-  connection.pipe(connection);
+  //   connection.write('+PONG\r\n');
+  //   connection.pipe(connection);
+
+  connection.on('data', (socket: net.Socket) => {
+    socket.write('+PONG\r\n');
+    socket.pipe(socket);
+  });
 });
 
 server.listen(6379, '127.0.0.1');

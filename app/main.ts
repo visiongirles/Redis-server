@@ -14,7 +14,7 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
   //   connection.write('+PONG\r\n');
   //   connection.pipe(connection);
 
-  connection.on('data', (data) => {
+  connection.on('data', (data: net.Data) => {
     //*2/r/n/$4/r/nPING/r/n/$4/r/nPING/r/n
 
     const escapeSymbols = ['\n', '\r\n', '\r'];

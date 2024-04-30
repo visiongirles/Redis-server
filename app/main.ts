@@ -15,6 +15,11 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
   //   connection.pipe(connection);
 
   connection.on('data', (data) => {
+    //*2/r/n/$4/r/nPING/r/n/$4/r/nPING/r/n
+
+    const escapeSymbols = ['\n', '\r\n', '\r'];
+    const ping = 'ping';
+
     console.log(`Received: ${data}`);
 
     connection.write('+PONG\r\n');

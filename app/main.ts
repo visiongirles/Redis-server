@@ -1,5 +1,5 @@
 import * as net from 'net';
-
+import { store } from './store';
 // You can use print statements as follows for debugging, they'll be visible when running tests.
 console.log('Logs from your program will appear here!');
 
@@ -30,8 +30,12 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
     const simpleString = '+';
     let index = 0;
 
+    // parse the request
+    // split the arguments by escaping symbols
     const request = data.toString().toLowerCase().split(escapeSymbols);
     console.log('request: ', request);
+
+    // check the first part of the request if there are enough arguments
     if (request[0].length < 2)
       throw Error("Request isn't correct. No enough arguments in type of data");
 
@@ -42,12 +46,12 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
     const numberOfArguments = Number(request[index].slice(1));
     console.log('numberOfArguments: ', numberOfArguments);
 
-    index++;
     // shift to the next array element
-    for (index; index <= numberOfArguments * 2; index++) {
-      // e.g. $4/r/n where $-Bulk strings - length === 2 [1]
+    index++;
 
-      // console.log('request[1]: ', request[index]);
+    for (index; index <= numberOfArguments * 2; index++) {
+      // check the following part of the request if there are enough arguments
+      // e.g. $4/r/n where $-Bulk strings - length === 2 [1]
       if (request[index].length < 2) {
         throw Error(
           `Request isn't correct. No enough arguments in line # ${index}`
@@ -65,8 +69,8 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
         );
       }
 
+      // extract command from the request
       const command = request[index];
-      // console.log('data: ', command);
 
       switch (command) {
         case 'ping': {
@@ -102,6 +106,90 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
           // const data = '+' + request[index] + escapeSymbols;
           console.log('data: ', data);
           connection.write(data);
+          break;
+        }
+        case 'set': {
+          // shift to the next array element
+          index++;
+
+          // retrieve the 'key'
+          if (request[index].length < 2) {
+            throw Error(
+              `Request isn't correct. No enough arguments in line # ${index}`
+            );
+          }
+
+          let sizeOfData = Number(request[index].slice(1));
+
+          // shift to the next array element
+          index++;
+
+          if (request[index].length < sizeOfData) {
+            throw Error(
+              `Request isn't correct. Not enough data in line # ${index}`
+            );
+          }
+
+          const key = request[index];
+
+          // shift to the next array element
+          index++;
+
+          // retrieve the 'key'
+          if (request[index].length < 2) {
+            throw Error(
+              `Request isn't correct. No enough arguments in line # ${index}`
+            );
+          }
+
+          sizeOfData = Number(request[index].slice(1));
+
+          // shift to the next array element
+          index++;
+
+          if (request[index].length < sizeOfData) {
+            throw Error(
+              `Request isn't correct. Not enough data in line # ${index}`
+            );
+          }
+
+          const value = request[index];
+
+          store.set(key, value);
+          console.log('[SET] key: ', key, ' value: ', store.get(key));
+          connection.write(simpleString + 'OK' + escapeSymbols);
+
+          break;
+        }
+        case 'get': {
+          // shift to the next array element
+          index++;
+
+          // retrieve the 'key'
+          if (request[index].length < 2) {
+            throw Error(
+              `Request isn't correct. No enough arguments in line # ${index}`
+            );
+          }
+
+          let sizeOfData = Number(request[index].slice(1));
+
+          // shift to the next array element
+          index++;
+
+          if (request[index].length < sizeOfData) {
+            throw Error(
+              `Request isn't correct. Not enough data in line # ${index}`
+            );
+          }
+
+          const key = request[index];
+          const value = store.get(key) ?? '-1';
+          console.log('[GET] key:', key, 'value: ', value);
+          connection.write(
+            bulkString + value.length + escapeSymbols + value + escapeSymbols
+          );
+
           break;
         }
         default: {

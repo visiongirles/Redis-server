@@ -3,6 +3,10 @@ import { store } from './store';
 // You can use print statements as follows for debugging, they'll be visible when running tests.
 console.log('Logs from your program will appear here!');
 
+const port = Number(process.argv[2] === '--port' ? process.argv[3] : 6379);
+console.log('[process.argv]: ', process.argv);
+console.log('[port]: ', port);
+
 // Uncomment this block to pass the first stage
 const server: net.Server = net.createServer((connection: net.Socket) => {
   // Handle connection
@@ -266,6 +270,7 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
 
           const expiry = data.timeToLive;
           console.log('[expiry]: ', expiry);
+
           if (expiry) {
             const isExpired = expiry < Date.now();
             if (isExpired) {
@@ -304,7 +309,7 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
   });
 });
 
-server.listen(6379, '127.0.0.1');
+server.listen(port, '127.0.0.1');
 
 // *1\r\n$4\r\nping\r\n
 // *2\r\n$4\r\necho\r\n$3\r\nhey\r\n

@@ -22,10 +22,12 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
     // $4\r\n $-Bulk strings - length === 2 [1]
     // PING\r\n\$4\r\nPING\r\n length === [1]
 
-    //TODO: предусмотреть вариант, когда запрос приходит не целиком. ь.е. надо сохранить, что получили  и дождаться продолжения запроса
+    //TODO: предусмотреть вариант, когда запрос приходит не целиком. т.е. надо сохранить, что получили  и дождаться продолжения запроса
 
+    // List of Redis serialization protocol (RESP) data types
     const escapeSymbols: string = '\r\n';
-    const ping = 'ping';
+    const bulkString = '$';
+    const simpleString = '+';
     let index = 0;
 
     const request = data.toString().toLowerCase().split(escapeSymbols);
@@ -68,7 +70,7 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
 
       switch (command) {
         case 'ping': {
-          connection.write('+PONG\r\n');
+          connection.write(simpleString + 'PONG' + escapeSymbols);
 
           break;
         }
@@ -91,12 +93,19 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
             );
           }
 
-          const data = request[index];
+          const data =
+            bulkString +
+            request[index].length +
+            escapeSymbols +
+            request[index] +
+            escapeSymbols;
+          // const data = '+' + request[index] + escapeSymbols;
+          console.log('data: ', data);
           connection.write(data);
           break;
         }
         default: {
-          connection.write('OK');
+          connection.write('+OK' + escapeSymbols);
         }
       }
     }

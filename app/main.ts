@@ -28,6 +28,7 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
     const escapeSymbols: string = '\r\n';
     const bulkString = '$';
     const simpleString = '+';
+    const nullBulkString = bulkString + '-1' + escapeSymbols;
     let index = 0;
 
     // parse the request
@@ -155,10 +156,74 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
 
           const value = request[index];
 
-          store.set(key, value);
-          console.log('[SET] key: ', key, ' value: ', store.get(key));
-          connection.write(simpleString + 'OK' + escapeSymbols);
+          //TODO: проверить есть ли старое значение и у него px
+          // if (store.has(key)) {
 
+          // }
+          // store.set(key, value);
+          // console.log('[SET] key: ', key, ' value: ', store.get(key));
+          // connection.write(simpleString + 'OK' + escapeSymbols);
+
+          index++;
+
+          // check if there are any OPTIONS
+          if (request[index].length < 2) {
+            // if no OPTIONS
+            store.set(key, { value: value, timeToLive: null });
+            console.log('[SET] key: ', key, ' value: ', store.get(key));
+            connection.write(simpleString + 'OK' + escapeSymbols);
+
+            break;
+            throw Error(
+              `Request isn't correct. No enough arguments in line # ${index}`
+            );
+          }
+
+          sizeOfData = Number(request[index].slice(1));
+
+          // shift to the next array element
+          index++;
+
+          if (request[index].length < sizeOfData) {
+            throw Error(
+              `Request isn't correct. Not enough data in line # ${index}`
+            );
+          }
+
+          const options = request[index].toLowerCase();
+          console.log('options: ', options);
+          if (options === 'px') {
+            index++;
+
+            // retrieve the 'px' value
+            if (request[index].length < 2) {
+              throw Error(
+                `Request isn't correct. No enough arguments in line # ${index}`
+              );
+            }
+
+            sizeOfData = Number(request[index].slice(1));
+
+            // shift to the next array element
+            index++;
+
+            if (request[index].length < sizeOfData) {
+              throw Error(
+                `Request isn't correct. Not enough data in line # ${index}`
+              );
+            }
+
+            const expiry = Number(request[index]);
+
+            // console.log('timeout: ', timeout);
+            // const timeoutId = setTimeout(() => {
+            //   store.delete(key);
+            // }, timeout);
+            const timeToLive = Date.now() + expiry;
+            store.set(key, { value: value, timeToLive: timeToLive });
+            console.log('[SET] key: ', key, ' value: ', store.get(key));
+            connection.write(simpleString + 'OK' + escapeSymbols);
+          }
           break;
         }
         case 'get': {
@@ -184,12 +249,47 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
           }
 
           const key = request[index];
-          const value = store.get(key) ?? '-1';
-          console.log('[GET] key:', key, 'value: ', value);
-          connection.write(
-            bulkString + value.length + escapeSymbols + value + escapeSymbols
-          );
 
+          // check expiry
+          const data = store.get(key);
+
+          if (!data) {
+            connection.write(nullBulkString);
+            console.log(
+              '[GET]: no value by the key',
+              key,
+              ' response: ',
+              nullBulkString
+            );
+            break;
+          }
+
+          const expiry = data.timeToLive;
+          console.log('[expiry]: ', expiry);
+          if (expiry) {
+            const isExpired = expiry < Date.now();
+            if (isExpired) {
+              store.delete(key);
+              connection.write(nullBulkString);
+              console.log(
+                '[GET]: key: ',
+                key,
+                ' has expired. Response: ',
+                nullBulkString
+              );
+              break;
+            }
+          }
+
+          const value = data.value;
+
+          const respond = value
+            ? bulkString + value.length + escapeSymbols + value + escapeSymbols
+            : nullBulkString;
+          console.log('[GET] key:', key, 'value: ', value);
+          connection.write(respond);
+          // 1714661600969 < 1714661751957
+          // 1714661751957
           break;
         }
         default: {

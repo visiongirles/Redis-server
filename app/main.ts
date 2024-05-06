@@ -1,9 +1,31 @@
 import * as net from 'net';
 import { store } from './store';
+import { serverInfo } from './config';
+import {
+  bulkString,
+  escapeSymbols,
+  simpleString,
+  nullBulkString,
+} from './constants';
+// import { requestParser } from './requestParser';
 // You can use print statements as follows for debugging, they'll be visible when running tests.
 console.log('Logs from your program will appear here!');
 
-const port = Number(process.argv[2] === '--port' ? process.argv[3] : 6379);
+const indexOfPortFlag = process.argv.indexOf('--port');
+
+// TODO: добавить обработку случая, когдау  нас выход за массивю. т.е. после флага порта, не передал реально порт -
+// в текуще случае будет NAN
+// 1) если нет флага, то у нас индекс -1 и порт 6379
+// 2) если мы вышли за границы массива, т.е. есть флаг ,но нет аргумента после него, то 6379
+
+// let port = (indexOfPortFlag !== -1) ? Number(process.argv[indexOfPortFlag + 1]) : 6379
+
+let port = 6379;
+
+if (indexOfPortFlag !== -1 && process.argv[indexOfPortFlag + 1]) {
+  port = Number(process.argv[indexOfPortFlag + 1]);
+}
+
 console.log('[process.argv]: ', process.argv);
 console.log('[port]: ', port);
 
@@ -19,20 +41,8 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
   //   connection.pipe(connection);
 
   connection.on('data', (data: string | Buffer) => {
-    // [numberOfArguments]/r/n[]
+    // console.log('[Server]: ', server);
 
-    //request example: *2\r\n\$4\r\nPING\r\n\$4\r\nPING\r\n
-    // [0] *2\r\n *-array length === 2   [1] !== 0
-    // $4\r\n $-Bulk strings - length === 2 [1]
-    // PING\r\n\$4\r\nPING\r\n length === [1]
-
-    //TODO: предусмотреть вариант, когда запрос приходит не целиком. т.е. надо сохранить, что получили  и дождаться продолжения запроса
-
-    // List of Redis serialization protocol (RESP) data types
-    const escapeSymbols: string = '\r\n';
-    const bulkString = '$';
-    const simpleString = '+';
-    const nullBulkString = bulkString + '-1' + escapeSymbols;
     let index = 0;
 
     // parse the request
@@ -273,6 +283,7 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
 
           if (expiry) {
             const isExpired = expiry < Date.now();
+
             if (isExpired) {
               store.delete(key);
               connection.write(nullBulkString);
@@ -297,15 +308,58 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
           // 1714661751957
           break;
         }
+        case 'info': {
+          index++;
+          if (index > request.length) {
+            //TODO:  случай, когда после Info нет аршументов
+            console.log(
+              '[Case when there is on arguments after INFO command. NO implementation done yet]'
+            );
+            break;
+          }
+
+          if (request[index].length < 2) {
+            throw Error(
+              `Request isn't correct. No enough arguments in line # ${index}`
+            );
+          }
+
+          const sizeOfData = Number(request[index].slice(1));
+
+          // shift to the next array element
+          index++;
+
+          if (request[index].length < sizeOfData) {
+            throw Error(
+              `Request isn't correct. Not enough data in line # ${index}`
+            );
+          }
+
+          let options = request[index];
+          // console.log('INFO argument is :', options);
+
+          switch (options) {
+            case 'replication': {
+              const response = infoReplicationResponse();
+              connection.write(response);
+              break;
+            }
+            default: {
+              console.log(
+                '[Default of switch for options. NO implementation done yet for the options: ]',
+                options
+              );
+              break;
+            }
+          }
+
+          break;
+        }
         default: {
           connection.write('+OK' + escapeSymbols);
         }
       }
     }
-
-    // console.log(`Received: ${data}`);
-
-    // connection.pipe(connection);
   });
 });
 
@@ -313,3 +367,34 @@ server.listen(port, '127.0.0.1');
 
 // *1\r\n$4\r\nping\r\n
 // *2\r\n$4\r\necho\r\n$3\r\nhey\r\n
+
+function infoReplicationResponse() {
+  // const jsonString = JSON.stringify(serverInfo);
+  // const response = jsonString.replace(/,/g, customDelimiter);
+
+  const serverInfoString = JSON.stringify(serverInfo)
+    .replaceAll(/["{}]/g, '')
+    .replaceAll(/,/g, escapeSymbols)
+    .replaceAll(/null/g, '');
+  // console.log('serverInfoString: ', serverInfoString);
+
+  // const serverInfoArray = serverInfoString.split(escapeSymbols);
+  // console.log('serverInfoArray: ', serverInfoArray);
+
+  // const responseArray: string[] = serverInfoArray.map((element: string) => {
+  //   const raw =
+  //     bulkString + element.length + escapeSymbols + element + escapeSymbols;
+  //   return raw;
+  // });
+  // console.log('responseArray: ', responseArray);
+
+  const response =
+    bulkString +
+    serverInfoString.length +
+    escapeSymbols +
+    serverInfoString +
+    escapeSymbols;
+
+  // console.log('Server info data to RESP format', response);
+  return response;
+}

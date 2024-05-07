@@ -1,6 +1,5 @@
 import * as net from 'net';
 import { store } from './store';
-import { serverInfo } from './config';
 import {
   bulkString,
   escapeSymbols,
@@ -10,27 +9,25 @@ import {
 } from './constants';
 import {
   createReplica,
+  infoReplicationResponse,
   isArgumentHasEnoughLength,
   isArray,
   isCommandHasNoOptions,
+  pingCommand,
   setUpPort,
 } from './utils';
-
-// console.log('[process.argv]: ', process.argv);
-// console.log('[port]: ', port);
 
 // Uncomment this block to pass the first stage
 const server: net.Server = net.createServer((connection: net.Socket) => {
   // Handle connection
-  createReplica();
+  console.log('Server is running');
+  createReplica(connection);
 
   connection.on('end', function () {
     console.log('client disconnected');
   });
 
   connection.on('data', (data: string | Buffer) => {
-    // console.log('[Server]: ', server);
-
     let index = 0;
 
     // parse the request
@@ -65,7 +62,7 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
 
       switch (command) {
         case 'ping': {
-          connection.write(simpleString + 'PONG' + escapeSymbols);
+          pingCommand(connection);
           break;
         }
         case 'echo': {
@@ -273,34 +270,3 @@ server.on('error', (error: Error) => {
 });
 // *1\r\n$4\r\nping\r\n
 // *2\r\n$4\r\necho\r\n$3\r\nhey\r\n
-
-function infoReplicationResponse() {
-  // const jsonString = JSON.stringify(serverInfo);
-  // const response = jsonString.replace(/,/g, customDelimiter);
-
-  const serverInfoString = JSON.stringify(serverInfo)
-    .replaceAll(/["{}]/g, '')
-    .replaceAll(/,/g, escapeSymbols)
-    .replaceAll(/null/g, '');
-  // console.log('serverInfoString: ', serverInfoString);
-
-  // const serverInfoArray = serverInfoString.split(escapeSymbols);
-  // console.log('serverInfoArray: ', serverInfoArray);
-
-  // const responseArray: string[] = serverInfoArray.map((element: string) => {
-  //   const raw =
-  //     bulkString + element.length + escapeSymbols + element + escapeSymbols;
-  //   return raw;
-  // });
-  // console.log('responseArray: ', responseArray);
-
-  const response =
-    bulkString +
-    serverInfoString.length +
-    escapeSymbols +
-    serverInfoString +
-    escapeSymbols;
-
-  // console.log('Server info data to RESP format', response);
-  return response;
-}

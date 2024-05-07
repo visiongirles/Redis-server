@@ -6,39 +6,27 @@ import {
   escapeSymbols,
   simpleString,
   nullBulkString,
+  minArgumentCount,
 } from './constants';
-// import { requestParser } from './requestParser';
-// You can use print statements as follows for debugging, they'll be visible when running tests.
-console.log('Logs from your program will appear here!');
+import {
+  createReplica,
+  isArgumentHasEnoughLength,
+  isArray,
+  isCommandHasNoOptions,
+  setUpPort,
+} from './utils';
 
-const indexOfPortFlag = process.argv.indexOf('--port');
-
-// TODO: добавить обработку случая, когдау  нас выход за массивю. т.е. после флага порта, не передал реально порт -
-// в текуще случае будет NAN
-// 1) если нет флага, то у нас индекс -1 и порт 6379
-// 2) если мы вышли за границы массива, т.е. есть флаг ,но нет аргумента после него, то 6379
-
-// let port = (indexOfPortFlag !== -1) ? Number(process.argv[indexOfPortFlag + 1]) : 6379
-
-let port = 6379;
-
-if (indexOfPortFlag !== -1 && process.argv[indexOfPortFlag + 1]) {
-  port = Number(process.argv[indexOfPortFlag + 1]);
-}
-
-console.log('[process.argv]: ', process.argv);
-console.log('[port]: ', port);
+// console.log('[process.argv]: ', process.argv);
+// console.log('[port]: ', port);
 
 // Uncomment this block to pass the first stage
 const server: net.Server = net.createServer((connection: net.Socket) => {
   // Handle connection
+  createReplica();
 
   connection.on('end', function () {
     console.log('client disconnected');
   });
-
-  //   connection.write('+PONG\r\n');
-  //   connection.pipe(connection);
 
   connection.on('data', (data: string | Buffer) => {
     // console.log('[Server]: ', server);
@@ -50,16 +38,12 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
     const request = data.toString().toLowerCase().split(escapeSymbols);
     console.log('request: ', request);
 
-    // check the first part of the request if there are enough arguments
-    if (request[0].length < 2)
-      throw Error("Request isn't correct. No enough arguments in type of data");
+    isArgumentHasEnoughLength(request[0], minArgumentCount);
 
-    const typeOfData: string = request[index][0]; // e.g. * which means array
-    console.log('typeOfData: ', typeOfData);
+    isArray(request[index][0]);
 
-    // const numberOfArguments: number = Number(request[0][1]);
     const numberOfArguments = Number(request[index].slice(1));
-    console.log('numberOfArguments: ', numberOfArguments);
+    // console.log('numberOfArguments: ', numberOfArguments);
 
     // shift to the next array element
     index++;
@@ -67,22 +51,14 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
     for (index; index <= numberOfArguments * 2; index++) {
       // check the following part of the request if there are enough arguments
       // e.g. $4/r/n where $-Bulk strings - length === 2 [1]
-      if (request[index].length < 2) {
-        throw Error(
-          `Request isn't correct. No enough arguments in line # ${index}`
-        );
-      }
+      isArgumentHasEnoughLength(request[index], minArgumentCount);
 
       const sizeOfData = Number(request[index].slice(1));
 
       // shift to the next array element
       index++;
 
-      if (request[index].length < sizeOfData) {
-        throw Error(
-          `Request isn't correct. Not enough data in line # ${index}`
-        );
-      }
+      isArgumentHasEnoughLength(request[index], sizeOfData);
 
       // extract command from the request
       const command = request[index];
@@ -90,27 +66,18 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
       switch (command) {
         case 'ping': {
           connection.write(simpleString + 'PONG' + escapeSymbols);
-
           break;
         }
         case 'echo': {
           index++;
-          if (request[index].length < 2) {
-            throw Error(
-              `Request isn't correct. No enough arguments in line # ${index}`
-            );
-          }
+          isArgumentHasEnoughLength(request[index], minArgumentCount);
 
           const sizeOfData = Number(request[index].slice(1));
 
           // shift to the next array element
           index++;
 
-          if (request[index].length < sizeOfData) {
-            throw Error(
-              `Request isn't correct. Not enough data in line # ${index}`
-            );
-          }
+          isArgumentHasEnoughLength(request[index], sizeOfData);
 
           const data =
             bulkString +
@@ -118,7 +85,7 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
             escapeSymbols +
             request[index] +
             escapeSymbols;
-          // const data = '+' + request[index] + escapeSymbols;
+
           console.log('data: ', data);
           connection.write(data);
           break;
@@ -126,71 +93,38 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
         case 'set': {
           // shift to the next array element
           index++;
-
-          // retrieve the 'key'
-          if (request[index].length < 2) {
-            throw Error(
-              `Request isn't correct. No enough arguments in line # ${index}`
-            );
-          }
-
+          isArgumentHasEnoughLength(request[index], minArgumentCount);
           let sizeOfData = Number(request[index].slice(1));
 
           // shift to the next array element
           index++;
+          isArgumentHasEnoughLength(request[index], sizeOfData);
 
-          if (request[index].length < sizeOfData) {
-            throw Error(
-              `Request isn't correct. Not enough data in line # ${index}`
-            );
-          }
-
+          // retrieve the 'key'
           const key = request[index];
 
           // shift to the next array element
           index++;
-
-          // retrieve the 'key'
-          if (request[index].length < 2) {
-            throw Error(
-              `Request isn't correct. No enough arguments in line # ${index}`
-            );
-          }
-
+          isArgumentHasEnoughLength(request[index], minArgumentCount);
           sizeOfData = Number(request[index].slice(1));
 
           // shift to the next array element
           index++;
+          isArgumentHasEnoughLength(request[index], sizeOfData);
 
-          if (request[index].length < sizeOfData) {
-            throw Error(
-              `Request isn't correct. Not enough data in line # ${index}`
-            );
-          }
-
+          // retrieve the 'value'
           const value = request[index];
 
-          //TODO: проверить есть ли старое значение и у него px
-          // if (store.has(key)) {
-
-          // }
-          // store.set(key, value);
-          // console.log('[SET] key: ', key, ' value: ', store.get(key));
-          // connection.write(simpleString + 'OK' + escapeSymbols);
-
+          // shift to the next array element
           index++;
 
           // check if there are any OPTIONS
-          if (request[index].length < 2) {
+          if (isCommandHasNoOptions(request[index])) {
             // if no OPTIONS
             store.set(key, { value: value, timeToLive: null });
             console.log('[SET] key: ', key, ' value: ', store.get(key));
             connection.write(simpleString + 'OK' + escapeSymbols);
-
             break;
-            throw Error(
-              `Request isn't correct. No enough arguments in line # ${index}`
-            );
           }
 
           sizeOfData = Number(request[index].slice(1));
@@ -198,41 +132,26 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
           // shift to the next array element
           index++;
 
-          if (request[index].length < sizeOfData) {
-            throw Error(
-              `Request isn't correct. Not enough data in line # ${index}`
-            );
-          }
+          isArgumentHasEnoughLength(request[index], sizeOfData);
 
           const options = request[index].toLowerCase();
-          console.log('options: ', options);
+          // console.log('options: ', options);
           if (options === 'px') {
+            // shift to the next array element
             index++;
 
             // retrieve the 'px' value
-            if (request[index].length < 2) {
-              throw Error(
-                `Request isn't correct. No enough arguments in line # ${index}`
-              );
-            }
+            isArgumentHasEnoughLength(request[index].length, 2);
 
             sizeOfData = Number(request[index].slice(1));
 
             // shift to the next array element
             index++;
 
-            if (request[index].length < sizeOfData) {
-              throw Error(
-                `Request isn't correct. Not enough data in line # ${index}`
-              );
-            }
+            isArgumentHasEnoughLength(request[index].length, sizeOfData);
 
             const expiry = Number(request[index]);
 
-            // console.log('timeout: ', timeout);
-            // const timeoutId = setTimeout(() => {
-            //   store.delete(key);
-            // }, timeout);
             const timeToLive = Date.now() + expiry;
             store.set(key, { value: value, timeToLive: timeToLive });
             console.log('[SET] key: ', key, ' value: ', store.get(key));
@@ -245,22 +164,14 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
           index++;
 
           // retrieve the 'key'
-          if (request[index].length < 2) {
-            throw Error(
-              `Request isn't correct. No enough arguments in line # ${index}`
-            );
-          }
+          isArgumentHasEnoughLength(request[index], minArgumentCount);
 
           let sizeOfData = Number(request[index].slice(1));
 
           // shift to the next array element
           index++;
 
-          if (request[index].length < sizeOfData) {
-            throw Error(
-              `Request isn't correct. Not enough data in line # ${index}`
-            );
-          }
+          isArgumentHasEnoughLength(request[index], sizeOfData);
 
           const key = request[index];
 
@@ -304,12 +215,12 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
             : nullBulkString;
           console.log('[GET] key:', key, 'value: ', value);
           connection.write(respond);
-          // 1714661600969 < 1714661751957
-          // 1714661751957
+
           break;
         }
         case 'info': {
           index++;
+
           if (index > request.length) {
             //TODO:  случай, когда после Info нет аршументов
             console.log(
@@ -318,22 +229,14 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
             break;
           }
 
-          if (request[index].length < 2) {
-            throw Error(
-              `Request isn't correct. No enough arguments in line # ${index}`
-            );
-          }
+          isArgumentHasEnoughLength(request[index], minArgumentCount);
 
           const sizeOfData = Number(request[index].slice(1));
 
           // shift to the next array element
           index++;
 
-          if (request[index].length < sizeOfData) {
-            throw Error(
-              `Request isn't correct. Not enough data in line # ${index}`
-            );
-          }
+          isArgumentHasEnoughLength(request[index], sizeOfData);
 
           let options = request[index];
           // console.log('INFO argument is :', options);
@@ -363,8 +266,11 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
   });
 });
 
-server.listen(port, '127.0.0.1');
+server.listen(setUpPort(), '127.0.0.1');
 
+server.on('error', (error: Error) => {
+  console.log(`[error event]: `, error);
+});
 // *1\r\n$4\r\nping\r\n
 // *2\r\n$4\r\necho\r\n$3\r\nhey\r\n
 

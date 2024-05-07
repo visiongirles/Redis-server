@@ -6,4 +6,5 @@
 #
 # DON'T EDIT THIS!
 exec bun run app/main.ts "$@" #  all of the parameters passed to the script
+# exec node app/main.ts "$@" #  all of the parameters passed to the script
 

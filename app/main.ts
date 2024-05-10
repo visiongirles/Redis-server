@@ -20,8 +20,6 @@ import {
 // Uncomment this block to pass the first stage
 const server: net.Server = net.createServer((connection: net.Socket) => {
   // Handle connection
-  console.log('Server is running');
-  createReplica(connection);
 
   connection.on('end', function () {
     console.log('client disconnected');
@@ -264,6 +262,13 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
 });
 
 server.listen(setUpPort(), '127.0.0.1');
+
+//TODO: как передать connection?!
+server.on('listening', () => {
+  // console.log('connection from Listening event: ', connection);
+  console.log('Server is running');
+  createReplica();
+});
 
 server.on('error', (error: Error) => {
   console.log(`[error event]: `, error);

@@ -4,7 +4,12 @@ import { bulkString, escapeSymbols, simpleString } from './constants';
 
 export function isArgumentHasEnoughLength(argument: any, size: number) {
   if (argument.length < size) {
-    throw Error("Request isn't correct. No enough arguments in type of data");
+    const message =
+      "Request isn't correct. No enough arguments in type of data. Argument: " +
+      argument +
+      ', size: ' +
+      size;
+    throw Error(message);
   }
   return;
 }
@@ -17,7 +22,7 @@ export function isArray(token: string) {
   return;
 }
 
-export function createReplica(connection: net.Socket) {
+export function createReplica() {
   const indexOfReplicaFlag = process.argv.indexOf('--replicaof');
 
   console.log('indexOfReplicaFlag: ', indexOfReplicaFlag);
@@ -27,11 +32,17 @@ export function createReplica(connection: net.Socket) {
     serverInfo.role = 'slave';
 
     const masterHost = process.argv[indexOfReplicaFlag + 1];
-    const masterPort = process.argv[indexOfReplicaFlag + 2];
+    const masterPort = Number(process.argv[indexOfReplicaFlag + 2]);
     console.log('masterHost: ', masterHost);
     console.log('masterPort: ', masterPort);
 
-    handshakeProcess(connection);
+    const slaveClient = net.createConnection(masterPort, masterHost, () => {});
+    handshakeProcess(slaveClient);
+
+    slaveClient.on('data', (data: string | Buffer) => {
+      const respond = data.toString();
+      console.log(respond);
+    });
   }
 }
 
@@ -50,8 +61,9 @@ export function isCommandHasNoOptions(argument: any) {
   return argument === '';
 }
 
-function handshakeProcess(connection: net.Socket) {
-  pingCommand(connection);
+function handshakeProcess(slaveClient: net.Socket) {
+  const ping = '*1\r\n$4\r\nPING\r\n';
+  slaveClient.write(ping);
 }
 
 export function infoReplicationResponse() {
@@ -75,4 +87,8 @@ export function infoReplicationResponse() {
 
 export function pingCommand(connection: net.Socket) {
   connection.write(simpleString + 'PONG' + escapeSymbols);
+}
+
+export function pongCommand() {
+  console.log('Pong');
 }

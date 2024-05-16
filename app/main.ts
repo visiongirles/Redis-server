@@ -1,5 +1,5 @@
 import * as net from 'net';
-import {} from './constants';
+import { array } from './constants';
 import { createReplica } from './createReplica';
 import { setUpPort } from './setUpPort';
 import { parseBuffer } from './parseBuffer';
@@ -21,14 +21,20 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
     while (buffer.length > 0) {
       const result = parseBuffer(buffer);
       const isSuccess: boolean = result[0];
-      console.log('[Buffer AFTER parsing]:', buffer.toString());
+      console.log(
+        '[Buffer AFTER parsing]:',
+        buffer.toString().replaceAll('\r\n', ' ')
+      );
       if (!isSuccess) break;
 
       const commandAndArguments: string[] = result[1];
       const command = commandAndArguments[0];
       const offset = result[2];
+
+      const dataForReplica = data.subarray(0, offset);
+
       console.log('[ParseResult]: ', result);
-      handleCommand(command, commandAndArguments, connection);
+      handleCommand(dataForReplica, command, commandAndArguments, connection);
       buffer = clearBuffer(buffer, offset);
       console.log(
         '[Buffer content]',

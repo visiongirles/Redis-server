@@ -5,8 +5,6 @@ type ReturnResult = [boolean, string, number];
 
 // *1/r/n/ [0-3] $4 [4-5] r/n/ [6-7] PING [8-11] + \r\n [12-13]
 export function parseBulkString(buffer: Buffer, offset: number): ReturnResult {
-  // console.log('Got buffer size: ', buffer.length);
-
   const isSuccess = true;
 
   if (!isArgumentBulkString(buffer, offset)) {
@@ -33,10 +31,6 @@ export function parseBulkString(buffer: Buffer, offset: number): ReturnResult {
 
   offset = indexBulkStringSizeEnd + escapeSymbols.length;
 
-  // console.log('BEFORE EVAL bulkStringSize: ', bulkStringSize);
-  // console.log('BEFORE EVAL offset: ', offset);
-  // console.log('BEFORE EVAL escapeSymbols.length: ', escapeSymbols.length);
-
   if (offset + bulkStringSize + escapeSymbols.length > buffer.length) {
     console.log('[Error]: not enough data in buffer');
     console.log(
@@ -49,8 +43,6 @@ export function parseBulkString(buffer: Buffer, offset: number): ReturnResult {
   }
 
   const indexBulkStringEnd = offset + bulkStringSize;
-
-  // console.log('indexBulkStringEnd: ', indexBulkStringEnd);
 
   const bulkString = buffer.subarray(offset, indexBulkStringEnd).toString();
 

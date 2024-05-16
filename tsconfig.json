@@ -21,6 +21,6 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["app"],
+  "include": ["app", "../../Client/transit/oldMain.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

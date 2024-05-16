@@ -10,8 +10,12 @@ import {
 import { store } from './store';
 import { psyncResponse } from './psyncResponse';
 import { createRDBfileResponse } from './createRDBfileResponse';
+import { isMasterServer } from './isMasterServer';
+import { listOfReplicas } from './listOfReplicas';
+import { propagateCommandToReplicas } from './propagateCommandToReplicas';
 
 export function handleCommand(
+  data: Buffer,
   command: string,
   commandArguments: string[],
   connection: net.Socket
@@ -41,7 +45,12 @@ export function handleCommand(
         // if no OPTIONS
         store.set(key, { value: value, timeToLive: null });
         console.log('[SET] key: ', key, ' value: ', store.get(key));
-        connection.write(simpleString + 'OK' + escapeSymbols);
+        if (isMasterServer()) {
+          const response = simpleString + 'OK' + escapeSymbols;
+          connection.write(response);
+          propagateCommandToReplicas(data);
+          // отправить всем репликам
+        }
         break;
       }
 
@@ -55,7 +64,13 @@ export function handleCommand(
         const timeToLive = Date.now() + expiry;
         store.set(key, { value: value, timeToLive: timeToLive });
         console.log('[SET] key: ', key, ' value: ', store.get(key));
-        connection.write(simpleString + 'OK' + escapeSymbols);
+
+        if (isMasterServer()) {
+          const response = simpleString + 'OK' + escapeSymbols;
+          connection.write(response);
+          propagateCommandToReplicas(data);
+          // отправить всем репликам
+        }
       }
       break;
     }
@@ -119,6 +134,8 @@ export function handleCommand(
 
       const rdb = createRDBfileResponse();
       connection.write(rdb);
+
+      listOfReplicas.add(connection);
 
       break;
     }

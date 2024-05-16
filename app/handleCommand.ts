@@ -9,6 +9,7 @@ import {
 } from './constants';
 import { store } from './store';
 import { psyncResponse } from './psyncResponse';
+import { createRDBfileResponse } from './createRDBfileResponse';
 
 export function handleCommand(
   command: string,
@@ -115,6 +116,10 @@ export function handleCommand(
     case 'psync': {
       const response = psyncResponse();
       connection.write(response);
+
+      const rdb = createRDBfileResponse();
+      connection.write(rdb);
+
       break;
     }
     default: {

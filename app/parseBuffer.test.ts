@@ -109,3 +109,57 @@ describe('Parse info with replication option', () => {
     );
   });
 });
+
+describe('Parse replconf with listening-port', () => {
+  const setCommandBuffer = Buffer.from(
+    `*3\r\n$8\r\nREPLCONF\r\n$14\r\nlistening-port\r\n$4\r\n6380\r\n`
+  );
+  const setCommandBufferSuccess = [
+    true,
+    ['replconf', 'listening-port', '6380'],
+    setCommandBuffer.length,
+  ];
+  test(`parses ${setCommandBuffer
+    .toString()
+    .replaceAll('\r\n', '\\r\\n')} to ${setCommandBufferSuccess}`, () => {
+    expect(parseBuffer(setCommandBuffer)).toStrictEqual(
+      setCommandBufferSuccess
+    );
+  });
+});
+
+describe('Parse replconf with capabilities', () => {
+  const setCommandBuffer = Buffer.from(
+    `*3\r\n$8\r\nREPLCONF\r\n$4\r\ncapa\r\n$6\r\npsync2\r\n`
+  );
+  const setCommandBufferSuccess = [
+    true,
+    ['replconf', 'capa', 'psync2'],
+    setCommandBuffer.length,
+  ];
+  test(`parses ${setCommandBuffer
+    .toString()
+    .replaceAll('\r\n', '\\r\\n')} to ${setCommandBufferSuccess}`, () => {
+    expect(parseBuffer(setCommandBuffer)).toStrictEqual(
+      setCommandBufferSuccess
+    );
+  });
+});
+
+describe('Parse psync with options', () => {
+  const setCommandBuffer = Buffer.from(
+    `*3\r\n$5\r\nPSYNC\r\n$1\r\n?\r\n$2\r\n-1\r\n`
+  );
+  const setCommandBufferSuccess = [
+    true,
+    ['psync', '?', '-1'],
+    setCommandBuffer.length,
+  ];
+  test(`parses ${setCommandBuffer
+    .toString()
+    .replaceAll('\r\n', '\\r\\n')} to ${setCommandBufferSuccess}`, () => {
+    expect(parseBuffer(setCommandBuffer)).toStrictEqual(
+      setCommandBufferSuccess
+    );
+  });
+});

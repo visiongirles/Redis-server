@@ -8,6 +8,7 @@ import {
   simpleString,
 } from './constants';
 import { store } from './store';
+import { psyncResponse } from './psyncResponse';
 
 export function handleCommand(
   command: string,
@@ -108,6 +109,12 @@ export function handleCommand(
         }
       }
 
+      break;
+    }
+
+    case 'psync': {
+      const response = psyncResponse();
+      connection.write(response);
       break;
     }
     default: {

@@ -1,6 +1,10 @@
 import { escapeSymbols } from './constants';
 import { parseBulkString } from './parseBulkString';
 
+const indexOfSucess = 0;
+const indexOfBulkString = 1;
+const indexOfOffset = 2;
+
 function isFirstArgumentArray(buffer: Buffer) {
   return buffer[0] == '*'.charCodeAt(0);
 }
@@ -13,14 +17,32 @@ export function isArgumentBulkString(buffer: Buffer, offset: number) {
   return buffer[offset] == '$'.charCodeAt(0);
 }
 
+function parseOptions(
+  argumentsCount: number,
+  buffer: Buffer,
+  offset: number
+): [boolean, string[], number] {
+  let options: string[] = [];
+  while (argumentsCount !== 0) {
+    const optionsParseResult = parseBulkString(buffer, offset);
+    const isSuccessOptions = optionsParseResult[indexOfSucess];
+    const option = optionsParseResult[indexOfBulkString];
+    offset = optionsParseResult[indexOfOffset];
+    if (!isSuccessOptions) {
+      return [isSuccessOptions, [], 0];
+    }
+    argumentsCount--;
+    options.push(option);
+  }
+  return [true, options, offset];
+}
+
 //TODO: заменить флаг isSucess  на null и
 // и вернуть помимо массива с распарсенной командой, новый оффсет
 // потом подумать если пришло полторы команды
 export function parseBuffer(buffer: Buffer): [boolean, string[], number] {
   // local constants
-  const indexOfSucess = 0;
-  const indexOfBulkString = 1;
-  const indexOfOffset = 2;
+
   const isSuccess = true;
 
   let offset = 0;
@@ -105,19 +127,29 @@ export function parseBuffer(buffer: Buffer): [boolean, string[], number] {
       }
 
       // OPTIONS START
-      let options = [];
-      while (argumentsCount !== 0) {
-        const optionsParseResult = parseBulkString(buffer, offset);
-        const isSuccessOptions = optionsParseResult[indexOfSucess];
-        const option = optionsParseResult[indexOfBulkString];
-        offset = optionsParseResult[indexOfOffset];
-        if (!isSuccessOptions) {
-          return [isSuccessOptions, [], offset];
-        }
-        argumentsCount--;
-        options.push(option);
+
+      const optionsParseResult = parseOptions(argumentsCount, buffer, offset);
+      const isSuccessResult = optionsParseResult[indexOfSucess];
+      const options = optionsParseResult[indexOfBulkString];
+      offset = optionsParseResult[indexOfOffset];
+      console.log('Options parse result: ', isSuccessResult);
+      if (!isSuccessResult) {
+        return [!isSuccess, [], 0];
       }
-      // buffer = clearBuffer(buffer, offset);
+      return [isSuccess, [command, key, value, ...options], offset];
+
+      // let options = [];
+      // while (argumentsCount !== 0) {
+      //   const optionsParseResult = parseBulkString(buffer, offset);
+      //   const isSuccessOptions = optionsParseResult[indexOfSucess];
+      //   const option = optionsParseResult[indexOfBulkString];
+      //   offset = optionsParseResult[indexOfOffset];
+      //   if (!isSuccessOptions) {
+      //     return [isSuccessOptions, [], offset];
+      //   }
+      //   argumentsCount--;
+      //   options.push(option);
+      // }
       return [
         isSuccessKeyResult,
         [command, key, value].concat(options),
@@ -139,6 +171,7 @@ export function parseBuffer(buffer: Buffer): [boolean, string[], number] {
       // buffer = clearBuffer(buffer, offset);
       return [isSuccessKeyResult, [command, key], offset];
     }
+
     case 'info': {
       if (!isCommandHasOptions(argumentsCount)) {
         return [!isSuccess, [], 0];
@@ -162,25 +195,55 @@ export function parseBuffer(buffer: Buffer): [boolean, string[], number] {
         return [isSuccess, [command], offset];
       }
       // OPTIONS START
-      let options: string[] = [];
-      options.push(command);
-      while (argumentsCount !== 0) {
-        const optionsParseResult = parseBulkString(buffer, offset);
-        const isSuccessOptions = optionsParseResult[indexOfSucess];
-        const option = optionsParseResult[indexOfBulkString];
-        offset = optionsParseResult[indexOfOffset];
-        if (!isSuccessOptions) {
-          return [isSuccessOptions, [], offset];
-        }
-        argumentsCount--;
-        options.push(option);
+
+      const optionsParseResult = parseOptions(argumentsCount, buffer, offset);
+      const isSuccessResult = optionsParseResult[indexOfSucess];
+      const options = optionsParseResult[indexOfBulkString];
+      offset = optionsParseResult[indexOfOffset];
+      console.log('Options parse result: ', isSuccessResult);
+      if (!isSuccessResult) {
+        return [!isSuccess, [], 0];
       }
+      return [isSuccess, [command, ...options], offset];
+
+      // const optionsParseResult = parseOptions(argumentsCount, buffer, offset);
+      // const isSuccessResult = optionsParseResult[indexOfSucess];
+      // const options = optionsParseResult[indexOfBulkString];
+      // offset = optionsParseResult[indexOfOffset];
+
+      // if (!isSuccessResult) {
+      //   return [!isSuccess, [], 0];
+      // }
+      // let options: string[] = [];
+      // options.push(command);
+      // while (argumentsCount !== 0) {
+      //   const optionsParseResult = parseBulkString(buffer, offset);
+      //   const isSuccessOptions = optionsParseResult[indexOfSucess];
+      //   const option = optionsParseResult[indexOfBulkString];
+      //   offset = optionsParseResult[indexOfOffset];
+      //   if (!isSuccessOptions) {
+      //     return [isSuccessOptions, [], offset];
+      //   }
+      //   argumentsCount--;
+      //   options.push(option);
+      // }
       // buffer = clearBuffer(buffer, offset);
-      return [isSuccess, options, offset];
+      // return [isSuccess, [command, ...options], offset];
 
       // OPTIONS END
     }
 
+    case 'psync': {
+      const optionsParseResult = parseOptions(argumentsCount, buffer, offset);
+      const isSuccessResult = optionsParseResult[indexOfSucess];
+      const options = optionsParseResult[indexOfBulkString];
+      offset = optionsParseResult[indexOfOffset];
+      console.log('Options parse result: ', isSuccessResult);
+      if (!isSuccessResult) {
+        return [!isSuccess, [], 0];
+      }
+      return [isSuccess, [command, ...options], offset];
+    }
     default: {
       return [!isSuccess, [], 0];
     }

@@ -137,6 +137,24 @@ export function handleCommand(
 
       listOfReplicas.add(connection);
 
+      // const replconfGetack = `*3\r\n$8\r\nREPLCONF\r\n$6\r\nGETACK\r\n`;
+      // connection.write(replconfGetack);
+      break;
+    }
+
+    case 'replconf': {
+      let options = commandArguments[1];
+
+      switch (options) {
+        case 'GETACK': {
+          const response = `*3\r\n$8\r\nREPLCONF\r\n$3\r\nACK\r\n$1\r\n0\r\n`;
+          connection.write(response);
+          break;
+        }
+        default: {
+          connection.write('+OK' + escapeSymbols);
+        }
+      }
       break;
     }
     default: {

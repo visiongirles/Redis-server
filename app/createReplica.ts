@@ -47,7 +47,7 @@ export async function createReplica() {
     slaveClient.on('data', (data: Buffer) => {
       clientBuffer = Buffer.concat([clientBuffer, data]);
 
-      clientBuffer = receiveRDBfile(data, clientBuffer);
+      clientBuffer = receiveRDBfile(clientBuffer);
 
       while (clientBuffer.length > 0) {
         console.log(
@@ -63,7 +63,7 @@ export async function createReplica() {
         const commandAndArguments: string[] = result[1];
         const command = commandAndArguments[0];
         const offset = result[2];
-        if (command === 'get' || command === 'set') {
+        if (command === 'get' || command === 'set' || command === 'replconf') {
           handleCommand(data, command, commandAndArguments, slaveClient);
         }
         clientBuffer = clearBuffer(clientBuffer, offset);

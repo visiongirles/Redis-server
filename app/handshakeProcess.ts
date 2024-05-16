@@ -44,7 +44,7 @@ function writeAsync(data: string, connection: net.Socket): Promise<Buffer> {
       console.log('Stage #2 in on data event Promise');
 
       resolve(data);
-      // connection.removeListener('data', onData);
+      connection.removeListener('data', onData);
     }
 
     function onError(error: Error) {

@@ -44,7 +44,7 @@ export function handleCommand(
       if (commandArguments.length < minimumOptions) {
         // if no OPTIONS
         store.set(key, { value: value, timeToLive: null });
-        console.log('[SET] key: ', key, ' value: ', store.get(key));
+        // console.log('[SET] key: ', key, ' value: ', store.get(key));
         if (isMasterServer()) {
           const response = simpleString + 'OK' + escapeSymbols;
           connection.write(response);
@@ -63,7 +63,7 @@ export function handleCommand(
 
         const timeToLive = Date.now() + expiry;
         store.set(key, { value: value, timeToLive: timeToLive });
-        console.log('[SET] key: ', key, ' value: ', store.get(key));
+        // console.log('[SET] key: ', key, ' value: ', store.get(key));
 
         if (isMasterServer()) {
           const response = simpleString + 'OK' + escapeSymbols;

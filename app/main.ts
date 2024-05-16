@@ -1,5 +1,4 @@
 import * as net from 'net';
-import { array } from './constants';
 import { createReplica } from './createReplica';
 import { setUpPort } from './setUpPort';
 import { parseBuffer } from './parseBuffer';
@@ -21,25 +20,29 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
     while (buffer.length > 0) {
       const result = parseBuffer(buffer);
       const isSuccess: boolean = result[0];
-      console.log(
-        '[Buffer AFTER parsing]:',
-        buffer.toString().replaceAll('\r\n', ' ')
-      );
+      // console.log(
+      //   '[Buffer AFTER parsing]:',
+      //   buffer.toString().replaceAll('\r\n', ' ')
+      // );
       if (!isSuccess) break;
 
       const commandAndArguments: string[] = result[1];
       const command = commandAndArguments[0];
       const offset = result[2];
 
-      const dataForReplica = data.subarray(0, offset);
+      const dataForReplica = buffer.subarray(0, offset);
 
-      console.log('[ParseResult]: ', result);
+      console.log(
+        '[Master Buffer]: ',
+        buffer.toString().replaceAll('\r\n', '\\r\\n')
+      );
+      console.log(
+        '[data for replica]: ',
+        dataForReplica.toString().replaceAll('\r\n', '\\r\\n')
+      );
       handleCommand(dataForReplica, command, commandAndArguments, connection);
       buffer = clearBuffer(buffer, offset);
-      console.log(
-        '[Buffer content]',
-        buffer.toString().replaceAll('\r\n', ' ')
-      );
+
       console.log("End of 'data' event");
     }
 
@@ -53,7 +56,6 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
 
 server.listen(setUpPort(), '127.0.0.1');
 
-//TODO: как передать connection?!
 server.on('listening', () => {
   // console.log('connection from Listening event: ', connection);
   console.log('Server is running');

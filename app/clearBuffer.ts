@@ -1,3 +1,3 @@
 export function clearBuffer(buffer: Buffer, offset: number) {
-  return buffer.subarray(offset);
+  return buffer.subarray(offset, buffer.length);
 }

@@ -1,8 +1,12 @@
 import * as net from 'net';
 import { serverInfo } from './config';
 import { handshakeProcess } from './handshakeProcess';
+import { parseBuffer } from './parseBuffer';
+import { handleCommand } from './handleCommand';
+import { clearBuffer } from './clearBuffer';
+import { receiveRDBfile } from './receiveRDBfile';
 
-export function createReplica() {
+export async function createReplica() {
   const indexOfReplicaFlag = process.argv.indexOf('--replicaof');
 
   console.log('indexOfReplicaFlag: ', indexOfReplicaFlag);
@@ -36,11 +40,34 @@ export function createReplica() {
     console.log('masterPort: ', masterPort);
 
     const slaveClient = net.createConnection(masterPort, masterHost, () => {});
-    handshakeProcess(slaveClient);
+    await handshakeProcess(slaveClient);
 
-    // slaveClient.on('data', (data: string | Buffer) => {
-    //   const respond = data.toString();
-    //   console.log('Respond from master: ', respond, ' END | ');
-    // });
+    let clientBuffer: Buffer = Buffer.alloc(0);
+
+    slaveClient.on('data', (data: Buffer) => {
+      clientBuffer = Buffer.concat([clientBuffer, data]);
+
+      clientBuffer = receiveRDBfile(data, clientBuffer);
+
+      while (clientBuffer.length > 0) {
+        console.log(
+          '[Replica buffer]: ',
+          clientBuffer.toString().replaceAll('\r\n', '\\r\\n')
+        );
+
+        const result = parseBuffer(clientBuffer);
+        console.log('[Replica parse result]: ', result);
+        const isSuccess: boolean = result[0];
+        if (!isSuccess) break;
+
+        const commandAndArguments: string[] = result[1];
+        const command = commandAndArguments[0];
+        const offset = result[2];
+        if (command === 'get' || command === 'set') {
+          handleCommand(data, command, commandAndArguments, slaveClient);
+        }
+        clientBuffer = clearBuffer(clientBuffer, offset);
+      }
+    });
   }
 }

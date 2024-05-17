@@ -161,6 +161,11 @@ export function handleCommand(
       }
       break;
     }
+    case 'WAIT': {
+      connection.write('0');
+
+      break;
+    }
     default: {
       connection.write('+OK' + escapeSymbols);
     }

@@ -3,7 +3,7 @@ import { describe, expect, test } from '@jest/globals';
 
 describe('Parse ping command', () => {
   const pingCommandBuffer = Buffer.from(`*1\r\n$4\r\nPING\r\n`);
-  const pingCommandBufferSuccess = [true, ['ping'], pingCommandBuffer.length];
+  const pingCommandBufferSuccess = [true, ['PING'], pingCommandBuffer.length];
   test(`parses ${pingCommandBuffer
     .toString()
     .replaceAll('\r\n', '\\r\\n')} to ${pingCommandBufferSuccess}`, () => {
@@ -15,7 +15,7 @@ describe('Parse ping command', () => {
 
 describe('Parse echo command', () => {
   const echoCommandBuffer = Buffer.from(`*2\r\n$4\r\nECHO\r\n$3\r\nhey\r\n`);
-  const echoBufferSuccess = [true, ['echo', 'hey'], echoCommandBuffer.length];
+  const echoBufferSuccess = [true, ['ECHO', 'hey'], echoCommandBuffer.length];
   test(`parses ${echoCommandBuffer
     .toString()
     .replaceAll('\r\n', '\\r\\n')} to ${echoBufferSuccess}`, () => {
@@ -29,7 +29,7 @@ describe('Parse echo command with two arguments', () => {
   );
   const echoCommandWithTwoArgumentsSuccess = [
     true,
-    ['echo', 'hello Twitch'],
+    ['ECHO', 'hello Twitch'],
     echoCommandWithTwoArgumentsBuffer.length,
   ];
   test(`parses ${echoCommandWithTwoArgumentsBuffer
@@ -62,7 +62,7 @@ describe('Parse set with key and value', () => {
   );
   const setCommandBufferSuccess = [
     true,
-    ['set', 'milk', 'waaay'],
+    ['SET', 'milk', 'waaay'],
     setCommandBuffer.length,
   ];
   test(`parses ${setCommandBuffer
@@ -80,7 +80,7 @@ describe('Parse set with options', () => {
   );
   const setCommandBufferSuccess = [
     true,
-    ['set', 'milk', 'waaay', 'px', '100'],
+    ['SET', 'milk', 'waaay', 'px', '100'],
     setCommandBuffer.length,
   ];
   test(`parses ${setCommandBuffer
@@ -98,7 +98,7 @@ describe('Parse info with replication option', () => {
   );
   const setCommandBufferSuccess = [
     true,
-    ['info', 'replication'],
+    ['INFO', 'replication'],
     setCommandBuffer.length,
   ];
   test(`parses ${setCommandBuffer
@@ -116,7 +116,7 @@ describe('Parse replconf with listening-port', () => {
   );
   const setCommandBufferSuccess = [
     true,
-    ['replconf', 'listening-port', '6380'],
+    ['REPLCONF', 'listening-port', '6380'],
     setCommandBuffer.length,
   ];
   test(`parses ${setCommandBuffer
@@ -134,7 +134,7 @@ describe('Parse replconf with capabilities', () => {
   );
   const setCommandBufferSuccess = [
     true,
-    ['replconf', 'capa', 'psync2'],
+    ['REPLCONF', 'capa', 'psync2'],
     setCommandBuffer.length,
   ];
   test(`parses ${setCommandBuffer
@@ -152,7 +152,7 @@ describe('Parse psync with options', () => {
   );
   const setCommandBufferSuccess = [
     true,
-    ['psync', '?', '-1'],
+    ['PSYNC', '?', '-1'],
     setCommandBuffer.length,
   ];
   test(`parses ${setCommandBuffer

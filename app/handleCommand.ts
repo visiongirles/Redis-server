@@ -13,6 +13,7 @@ import { createRDBfileResponse } from './createRDBfileResponse';
 import { isMasterServer } from './isMasterServer';
 import { listOfReplicas } from './listOfReplicas';
 import { propagateCommandToReplicas } from './propagateCommandToReplicas';
+import { serverInfo } from './config';
 
 export function handleCommand(
   data: Buffer,
@@ -21,11 +22,12 @@ export function handleCommand(
   connection: net.Socket
 ) {
   switch (command) {
-    case 'ping': {
+    case 'PING': {
       pingCommand(connection);
+
       break;
     }
-    case 'echo': {
+    case 'ECHO': {
       //все кроме команды склеить в строку
       const echo = commandArguments[1];
 
@@ -35,7 +37,7 @@ export function handleCommand(
       connection.write(data);
       break;
     }
-    case 'set': {
+    case 'SET': {
       const key = commandArguments[1];
       const value = commandArguments[2];
 
@@ -74,7 +76,7 @@ export function handleCommand(
       }
       break;
     }
-    case 'get': {
+    case 'GET': {
       const key = commandArguments[1];
 
       // check expiry
@@ -106,7 +108,7 @@ export function handleCommand(
 
       break;
     }
-    case 'info': {
+    case 'INFO': {
       let options = commandArguments[1];
       // console.log('INFO argument is :', options);
 
@@ -128,7 +130,7 @@ export function handleCommand(
       break;
     }
 
-    case 'psync': {
+    case 'PSYNC': {
       const response = psyncResponse();
       connection.write(response);
 
@@ -142,12 +144,14 @@ export function handleCommand(
       break;
     }
 
-    case 'replconf': {
+    case 'REPLCONF': {
       let options = commandArguments[1];
 
       switch (options) {
         case 'GETACK': {
-          const response = `*3\r\n$8\r\nREPLCONF\r\n$3\r\nACK\r\n$1\r\n0\r\n`;
+          const response = `*3\r\n$8\r\nREPLCONF\r\n$3\r\nACK\r\n$${
+            serverInfo.master_repl_offset.toString().length
+          }\r\n${serverInfo.master_repl_offset}\r\n`;
           connection.write(response);
           break;
         }

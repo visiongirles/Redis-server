@@ -26,7 +26,8 @@ export function isCommandHasNoOptions(argument: any) {
 }
 
 export function pingCommand(connection: net.Socket) {
-  connection.write(simpleString + 'PONG' + escapeSymbols);
+  const reponse = simpleString + 'PONG' + escapeSymbols;
+  connection.write(reponse);
 }
 
 export function pongCommand() {

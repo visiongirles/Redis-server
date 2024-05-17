@@ -63,9 +63,12 @@ export async function createReplica() {
         const commandAndArguments: string[] = result[1];
         const command = commandAndArguments[0];
         const offset = result[2];
-        if (command === 'get' || command === 'set' || command === 'replconf') {
+        if (command === 'GET' || command === 'SET' || command === 'REPLCONF') {
           handleCommand(data, command, commandAndArguments, slaveClient);
         }
+
+        serverInfo.master_repl_offset += offset;
+
         clientBuffer = clearBuffer(clientBuffer, offset);
       }
     });

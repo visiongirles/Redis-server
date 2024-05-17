@@ -69,7 +69,7 @@ export function parseBuffer(buffer: Buffer): [boolean, string[], number] {
 
   const commandParseResult = parseBulkString(buffer, offset);
   const isSuccessResult = commandParseResult[indexOfSucess];
-  const command = commandParseResult[indexOfBulkString].toLowerCase();
+  const command = commandParseResult[indexOfBulkString];
   offset = commandParseResult[indexOfOffset];
   argumentsCount--;
   // console.log('[commandParseResult]: ', commandParseResult);
@@ -79,12 +79,12 @@ export function parseBuffer(buffer: Buffer): [boolean, string[], number] {
   }
 
   switch (command) {
-    case 'ping': {
+    case 'PING': {
       // buffer = clearBuffer(buffer, offset);
       return [isSuccess, [command], offset];
     }
 
-    case 'echo': {
+    case 'ECHO': {
       const result = parseBulkString(buffer, offset);
       const isSuccessResult = result[indexOfSucess];
       const echo = result[indexOfBulkString];
@@ -97,7 +97,7 @@ export function parseBuffer(buffer: Buffer): [boolean, string[], number] {
       return [isSuccessResult, [command, echo], offset];
     }
 
-    case 'set': {
+    case 'SET': {
       //  [ "*3", "$3", "set", "$4", "ping", "$5", "hello", "" ]
       //  "*5", "$3", "set", "$3", "foo", "$3", "bar", "$2", "px", "$3", "100", ""
       // redis-cli SET foo bar px 100
@@ -159,7 +159,7 @@ export function parseBuffer(buffer: Buffer): [boolean, string[], number] {
       // OPTIONS END
     }
 
-    case 'get': {
+    case 'GET': {
       const keyParseResult = parseBulkString(buffer, offset);
       const isSuccessKeyResult = keyParseResult[indexOfSucess];
       const key = keyParseResult[indexOfBulkString];
@@ -172,7 +172,7 @@ export function parseBuffer(buffer: Buffer): [boolean, string[], number] {
       return [isSuccessKeyResult, [command, key], offset];
     }
 
-    case 'info': {
+    case 'INFO': {
       if (!isCommandHasOptions(argumentsCount)) {
         return [!isSuccess, [], 0];
       }
@@ -189,7 +189,7 @@ export function parseBuffer(buffer: Buffer): [boolean, string[], number] {
       return [isSuccessResult, [command, option], offset];
     }
 
-    case 'replconf': {
+    case 'REPLCONF': {
       if (!isCommandHasOptions(argumentsCount)) {
         // buffer = clearBuffer(buffer, offset);
         return [isSuccess, [command], offset];
@@ -233,7 +233,7 @@ export function parseBuffer(buffer: Buffer): [boolean, string[], number] {
       // OPTIONS END
     }
 
-    case 'psync': {
+    case 'PSYNC': {
       const optionsParseResult = parseOptions(argumentsCount, buffer, offset);
       const isSuccessResult = optionsParseResult[indexOfSucess];
       const options = optionsParseResult[indexOfBulkString];

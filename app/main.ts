@@ -4,6 +4,8 @@ import { setUpPort } from './setUpPort';
 import { parseBuffer } from './parseBuffer';
 import { handleCommand } from './handleCommand';
 import { clearBuffer } from './clearBuffer';
+import { isMasterServer } from './isMasterServer';
+import { serverInfo } from './config';
 
 // Uncomment this block to pass the first stage
 const server: net.Server = net.createServer((connection: net.Socket) => {
@@ -41,6 +43,7 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
         dataForReplica.toString().replaceAll('\r\n', '\\r\\n')
       );
       handleCommand(dataForReplica, command, commandAndArguments, connection);
+
       buffer = clearBuffer(buffer, offset);
 
       console.log("End of 'data' event");

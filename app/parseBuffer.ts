@@ -244,6 +244,17 @@ export function parseBuffer(buffer: Buffer): [boolean, string[], number] {
       }
       return [isSuccess, [command, ...options], offset];
     }
+    case 'WAIT': {
+      const optionsParseResult = parseOptions(argumentsCount, buffer, offset);
+      const isSuccessResult = optionsParseResult[indexOfSucess];
+      const options = optionsParseResult[indexOfBulkString];
+      offset = optionsParseResult[indexOfOffset];
+      console.log('Options parse result: ', isSuccessResult);
+      if (!isSuccessResult) {
+        return [!isSuccess, [], 0];
+      }
+      return [isSuccess, [command, ...options], offset];
+    }
     default: {
       return [!isSuccess, [], 0];
     }

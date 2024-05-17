@@ -162,7 +162,7 @@ export function handleCommand(
       break;
     }
     case 'WAIT': {
-      connection.write('0');
+      connection.write(`:0` + escapeSymbols);
 
       break;
     }

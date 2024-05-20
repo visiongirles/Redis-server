@@ -43,7 +43,7 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
         dataForReplica.toString().replaceAll('\r\n', '\\r\\n')
       );
       handleCommand(dataForReplica, command, commandAndArguments, connection);
-
+      // serverInfo.master_repl_offset += offset;
       buffer = clearBuffer(buffer, offset);
 
       console.log("End of 'data' event");

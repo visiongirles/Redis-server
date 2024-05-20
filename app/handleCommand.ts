@@ -14,8 +14,9 @@ import { isMasterServer } from './isMasterServer';
 import { listOfReplicas } from './listOfReplicas';
 import { propagateCommandToReplicas } from './propagateCommandToReplicas';
 import { serverInfo } from './config';
+import { getAck } from './getAck';
 
-export function handleCommand(
+export async function handleCommand(
   data: Buffer,
   command: string,
   commandArguments: string[],
@@ -40,17 +41,18 @@ export function handleCommand(
     case 'SET': {
       const key = commandArguments[1];
       const value = commandArguments[2];
+      console.log('[SET] role of server: ', serverInfo.role);
 
       // check if there are any OPTIONS
       const minimumOptions = 4;
       if (commandArguments.length < minimumOptions) {
         // if no OPTIONS
         store.set(key, { value: value, timeToLive: null });
-        // console.log('[SET] key: ', key, ' value: ', store.get(key));
         if (isMasterServer()) {
           const response = simpleString + 'OK' + escapeSymbols;
           connection.write(response);
           propagateCommandToReplicas(data);
+          serverInfo.master_repl_offset += data.length;
           // отправить всем репликам
         }
         break;
@@ -71,6 +73,8 @@ export function handleCommand(
           const response = simpleString + 'OK' + escapeSymbols;
           connection.write(response);
           propagateCommandToReplicas(data);
+          serverInfo.master_repl_offset += data.length;
+
           // отправить всем репликам
         }
       }
@@ -153,21 +157,51 @@ export function handleCommand(
             serverInfo.master_repl_offset.toString().length
           }\r\n${serverInfo.master_repl_offset}\r\n`;
           connection.write(response);
+          console.log(`[GETACK response: ]`, response);
+          break;
+        }
+        case 'listening-port':
+        case 'capa': {
+          connection.write('+OK' + escapeSymbols);
           break;
         }
         default: {
-          connection.write('+OK' + escapeSymbols);
         }
       }
       break;
     }
     case 'WAIT': {
-      // const count =
-      //   Number(commandArguments[1]) > listOfReplicas.size
-      //     ? commandArguments[1]
-      //     : listOfReplicas.size;
-      const count = listOfReplicas.size;
-      connection.write(`:${count}` + escapeSymbols);
+      // const countFromArgument = Number(commandArguments[1]);
+      const timeout = Number(commandArguments[2]);
+      // const count = listOfReplicas.size;
+      const data = `*3\r\n$8\r\nREPLCONF\r\n$6\r\nGETACK\r\n$1\r\n*\r\n`;
+
+      try {
+        const responses = await getAck(data, timeout);
+
+        const numberOfAliveReplicas = responses.filter(
+          (response) => response.toString() !== `replica is dead`
+        );
+
+        const response =
+          serverInfo.master_repl_offset === 0
+            ? listOfReplicas.size
+            : numberOfAliveReplicas.length;
+
+        console.log(`Active replicas count: `, numberOfAliveReplicas.length);
+        // const count =
+        //   responses.length > countFromArgument
+        //     ? countFromArgument
+        //     : responses.length;
+
+        // propagateCommandToReplicas(data);
+        connection.write(`:${response}` + escapeSymbols);
+      } catch (error) {
+        console.log('[ERROR from WAIT getAck()]: ', error);
+      }
+
+      //TODO: проверка на количество байт в offset
+      // serverInfo.master_repl_offset === ответ от реплики
 
       break;
     }

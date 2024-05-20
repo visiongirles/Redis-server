@@ -132,7 +132,7 @@ export function parseBuffer(buffer: Buffer): [boolean, string[], number] {
       const isSuccessResult = optionsParseResult[indexOfSucess];
       const options = optionsParseResult[indexOfBulkString];
       offset = optionsParseResult[indexOfOffset];
-      console.log('Options parse result: ', isSuccessResult);
+      // console.log('Options parse result: ', isSuccessResult);
       if (!isSuccessResult) {
         return [!isSuccess, [], 0];
       }
@@ -200,7 +200,7 @@ export function parseBuffer(buffer: Buffer): [boolean, string[], number] {
       const isSuccessResult = optionsParseResult[indexOfSucess];
       const options = optionsParseResult[indexOfBulkString];
       offset = optionsParseResult[indexOfOffset];
-      console.log('Options parse result: ', isSuccessResult);
+      // console.log('Options parse result: ', isSuccessResult);
       if (!isSuccessResult) {
         return [!isSuccess, [], 0];
       }
@@ -238,7 +238,7 @@ export function parseBuffer(buffer: Buffer): [boolean, string[], number] {
       const isSuccessResult = optionsParseResult[indexOfSucess];
       const options = optionsParseResult[indexOfBulkString];
       offset = optionsParseResult[indexOfOffset];
-      console.log('Options parse result: ', isSuccessResult);
+      // console.log('Options parse result: ', isSuccessResult);
       if (!isSuccessResult) {
         return [!isSuccess, [], 0];
       }
@@ -249,7 +249,7 @@ export function parseBuffer(buffer: Buffer): [boolean, string[], number] {
       const isSuccessResult = optionsParseResult[indexOfSucess];
       const options = optionsParseResult[indexOfBulkString];
       offset = optionsParseResult[indexOfOffset];
-      console.log('Options parse result: ', isSuccessResult);
+      // console.log('Options parse result: ', isSuccessResult);
       if (!isSuccessResult) {
         return [!isSuccess, [], 0];
       }

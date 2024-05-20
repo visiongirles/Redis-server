@@ -162,7 +162,12 @@ export function handleCommand(
       break;
     }
     case 'WAIT': {
-      connection.write(`:0` + escapeSymbols);
+      // const count =
+      //   Number(commandArguments[1]) > listOfReplicas.size
+      //     ? commandArguments[1]
+      //     : listOfReplicas.size;
+      const count = listOfReplicas.size;
+      connection.write(`:${count}` + escapeSymbols);
 
       break;
     }

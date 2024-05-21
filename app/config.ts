@@ -9,3 +9,14 @@ export const serverInfo = {
   repl_backlog_first_byte_offset: 0,
   repl_backlog_histlen: null,
 };
+
+interface Config {
+  dir: string;
+  dbfilename: string;
+  [key: string]: string; // Индексная сигнатура
+}
+
+export const configPath: Config = {
+  dir: '',
+  dbfilename: '',
+};

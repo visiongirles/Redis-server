@@ -13,8 +13,9 @@ import { createRDBfileResponse } from './createRDBfileResponse';
 import { isMasterServer } from './isMasterServer';
 import { listOfReplicas } from './listOfReplicas';
 import { propagateCommandToReplicas } from './propagateCommandToReplicas';
-import { serverInfo } from './config';
+import { configPath, serverInfo } from './config';
 import { getAck } from './getAck';
+import { createRESPArray } from './createRESPArray';
 
 export async function handleCommand(
   data: Buffer,
@@ -203,6 +204,18 @@ export async function handleCommand(
       //TODO: проверка на количество байт в offset
       // serverInfo.master_repl_offset === ответ от реплики
 
+      break;
+    }
+    case 'CONFIG': {
+      const option = commandArguments[1];
+      switch (option) {
+        case 'GET': {
+          const argument: string = commandArguments[2];
+          const response = createRESPArray(argument, configPath[argument]);
+          connection.write(response);
+          break;
+        }
+      }
       break;
     }
     default: {

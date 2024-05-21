@@ -4,8 +4,9 @@ import { setUpPort } from './setUpPort';
 import { parseBuffer } from './parseBuffer';
 import { handleCommand } from './handleCommand';
 import { clearBuffer } from './clearBuffer';
-import { isMasterServer } from './isMasterServer';
-import { serverInfo } from './config';
+import { handshakeProcess } from './handshakeProcess';
+import { setReplicaHandler } from './setReplicaHandler';
+import { setConfig } from './setConfig';
 
 // Uncomment this block to pass the first stage
 const server: net.Server = net.createServer((connection: net.Socket) => {
@@ -59,14 +60,19 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
 
 server.listen(setUpPort(), '127.0.0.1');
 
-server.on('listening', () => {
+server.on('listening', async () => {
   // console.log('connection from Listening event: ', connection);
   console.log('Server is running');
-  createReplica();
+  const replica = createReplica();
+  if (replica !== null) {
+    await handshakeProcess(replica);
+
+    setReplicaHandler(replica);
+  }
+
+  setConfig();
 });
 
 server.on('error', (error: Error) => {
   console.log(`[error event]: `, error);
 });
-// *1\r\n$4\r\nping\r\n
-// *2\r\n$4\r\necho\r\n$3\r\nhey\r\n

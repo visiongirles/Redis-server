@@ -1,4 +1,4 @@
-import { listOfReplicas } from './listOfReplicas';
+import { listOfReplicas } from './constants/listOfReplicas';
 
 export function getAck(
   data: string | Buffer,

@@ -1,7 +1,7 @@
-import { serverInfo } from './config';
-import { bulkString, escapeSymbols } from './constants';
+import { serverInfo } from './constants/config';
+import { bulkString, escapeSymbols } from './constants/constants';
 
-export function infoReplicationResponse() {
+export function getInfoReplicationResponse() {
   const serverInfoString = JSON.stringify(serverInfo)
     .replaceAll(/["{}]/g, '')
     .replaceAll(/,/g, escapeSymbols)

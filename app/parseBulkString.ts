@@ -1,5 +1,5 @@
-import { escapeSymbols } from './constants';
-import { isArgumentBulkString } from './parseBuffer';
+import { escapeSymbols } from './constants/constants';
+import { isArgumentBulkString } from './isArgumentBulkString';
 
 type ReturnResult = [boolean, string, number];
 
@@ -8,10 +8,10 @@ export function parseBulkString(buffer: Buffer, offset: number): ReturnResult {
   const isSuccess = true;
 
   if (!isArgumentBulkString(buffer, offset)) {
-    console.log(
-      '[Error]: excpected to receive $, but got: ',
-      buffer[offset].toString()
-    );
+    // console.log(
+    //   '[Error]: excpected to receive $, but got: ',
+    //   buffer[offset].toString()
+    // );
     return [!isSuccess, '', offset];
   }
 

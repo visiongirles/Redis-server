@@ -1,16 +1,16 @@
 import * as net from 'net';
-import { clearBuffer } from './clearBuffer';
-import { serverInfo } from './config';
+import { clearBuffer } from './functions/clearBuffer';
+import { serverInfo } from './constants/config';
 import { handleCommand } from './handleCommand';
 import { parseBuffer } from './parseBuffer';
-import { receiveRDBfile } from './receiveRDBfile';
+import { getRDBfile } from './getRDBfile';
 
 export const setReplicaHandler = (slaveClient: net.Socket) => {
   let clientBuffer: Buffer = Buffer.alloc(0);
   slaveClient.on('data', (data: Buffer) => {
     clientBuffer = Buffer.concat([clientBuffer, data]);
 
-    clientBuffer = receiveRDBfile(clientBuffer);
+    clientBuffer = getRDBfile(clientBuffer);
 
     while (clientBuffer.length > 0) {
       console.log(

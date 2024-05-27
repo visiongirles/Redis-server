@@ -1,6 +1,6 @@
-import { bulkString, escapeSymbols } from './constants';
+import { bulkString, escapeSymbols } from './constants/constants';
 
-export function createRDBfileResponse(): Buffer {
+export function setRDBfileResponse(): Buffer {
   const contentBase64 = `UkVESVMwMDEx+glyZWRpcy12ZXIFNy4yLjD6CnJlZGlzLWJpdHPAQPoFY3RpbWXCbQi8ZfoIdXNlZC1tZW3CsMQQAPoIYW9mLWJhc2XAAP/wbjv+wP9aog==`;
 
   const content = Buffer.from(contentBase64, 'base64');

@@ -1,4 +1,4 @@
-import { configPath } from './config';
+import { configPath } from './constants/config';
 
 export function setConfig() {
   const indexOfDirFlag = process.argv.indexOf('--dir');

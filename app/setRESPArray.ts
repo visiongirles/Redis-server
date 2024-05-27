@@ -1,6 +1,6 @@
-import { bulkString, escapeSymbols } from './constants';
+import { bulkString, escapeSymbols } from './constants/constants';
 
-export function createRESPArray(...args: string[]): string {
+export function setRESPArray(...args: string[]): string {
   let response = `*` + args.length + escapeSymbols;
   args.forEach((arg) => {
     response += bulkString + arg.length + escapeSymbols + arg + escapeSymbols;

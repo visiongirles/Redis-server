@@ -1,4 +1,4 @@
-import { parseBuffer } from './parseBuffer';
+import { parseBuffer } from '../parseBuffer';
 import { describe, expect, test } from '@jest/globals';
 
 describe('Parse ping command', () => {
@@ -25,7 +25,7 @@ describe('Parse echo command', () => {
 
 describe('Parse echo command with two arguments', () => {
   const echoCommandWithTwoArgumentsBuffer = Buffer.from(
-    `*3\r\n$4\r\nECHO\r\n$12\r\nhello Twitch\r\n`
+    `*2\r\n$4\r\nECHO\r\n$12\r\nhello Twitch\r\n`
   );
   const echoCommandWithTwoArgumentsSuccess = [
     true,
@@ -94,7 +94,7 @@ describe('Parse set with options', () => {
 
 describe('Parse info with replication option', () => {
   const setCommandBuffer = Buffer.from(
-    `*3\r\n$4\r\nINFO\r\n$11\r\nreplication\r\n`
+    `*2\r\n$4\r\nINFO\r\n$11\r\nreplication\r\n`
   );
   const setCommandBufferSuccess = [
     true,

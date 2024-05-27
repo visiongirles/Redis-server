@@ -1,21 +1,22 @@
 import * as net from 'net';
-import { pingCommand } from './utils';
-import { infoReplicationResponse } from './infoReplicationResponse';
+import { setPingResponse } from './setPingResponse';
+import { getInfoReplicationResponse } from './getInfoReplicationResponse';
 import {
   bulkString,
   escapeSymbols,
   nullBulkString,
   simpleString,
-} from './constants';
-import { store } from './store';
-import { psyncResponse } from './psyncResponse';
-import { createRDBfileResponse } from './createRDBfileResponse';
+} from './constants/constants';
+import { store } from './constants/store';
+import { setPsyncResponse } from './setPsyncResponse';
+import { setRDBfileResponse } from './setRDBfileResponse';
 import { isMasterServer } from './isMasterServer';
-import { listOfReplicas } from './listOfReplicas';
+import { listOfReplicas } from './constants/listOfReplicas';
 import { propagateCommandToReplicas } from './propagateCommandToReplicas';
-import { configPath, serverInfo } from './config';
+import { configPath, serverInfo } from './constants/config';
 import { getAck } from './getAck';
-import { createRESPArray } from './createRESPArray';
+import { setRESPArray } from './setRESPArray';
+import { parseRDBfile } from './parseRDBfile';
 
 export async function handleCommand(
   data: Buffer,
@@ -25,8 +26,7 @@ export async function handleCommand(
 ) {
   switch (command) {
     case 'PING': {
-      pingCommand(connection);
-
+      setPingResponse(connection);
       break;
     }
     case 'ECHO': {
@@ -119,7 +119,7 @@ export async function handleCommand(
 
       switch (options) {
         case 'replication': {
-          const response = infoReplicationResponse();
+          const response = getInfoReplicationResponse();
           connection.write(response);
           break;
         }
@@ -136,10 +136,10 @@ export async function handleCommand(
     }
 
     case 'PSYNC': {
-      const response = psyncResponse();
+      const response = setPsyncResponse();
       connection.write(response);
 
-      const rdb = createRDBfileResponse();
+      const rdb = setRDBfileResponse();
       connection.write(rdb);
 
       listOfReplicas.add(connection);
@@ -211,11 +211,19 @@ export async function handleCommand(
       switch (option) {
         case 'GET': {
           const argument: string = commandArguments[2];
-          const response = createRESPArray(argument, configPath[argument]);
+          const response = setRESPArray(argument, configPath[argument]);
           connection.write(response);
           break;
         }
       }
+      break;
+    }
+    case 'KEYS': {
+      const rdb = parseRDBfile(configPath.dir, configPath.dbfilename);
+      const keysIterator = rdb.hashmap.keys();
+      const firstKey = keysIterator.next().value;
+      const response = setRESPArray(firstKey);
+      connection.write(response);
       break;
     }
     default: {

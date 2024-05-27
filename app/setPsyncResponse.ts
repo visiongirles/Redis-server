@@ -1,7 +1,7 @@
-import { serverInfo } from './config';
-import { simpleString, escapeSymbols } from './constants';
+import { serverInfo } from './constants/config';
+import { simpleString, escapeSymbols } from './constants/constants';
 
-export function psyncResponse() {
+export function setPsyncResponse() {
   const id = serverInfo.master_replid;
   const offset = serverInfo.master_repl_offset.toString();
 

@@ -1,9 +1,9 @@
 import * as net from 'net';
-import { createReplica } from './createReplica';
-import { setUpPort } from './setUpPort';
+import { setReplica } from './setReplica';
+import { setPort } from './setPort';
 import { parseBuffer } from './parseBuffer';
 import { handleCommand } from './handleCommand';
-import { clearBuffer } from './clearBuffer';
+import { clearBuffer } from './functions/clearBuffer';
 import { handshakeProcess } from './handshakeProcess';
 import { setReplicaHandler } from './setReplicaHandler';
 import { setConfig } from './setConfig';
@@ -58,12 +58,12 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
   });
 });
 
-server.listen(setUpPort(), '127.0.0.1');
+server.listen(setPort(), '127.0.0.1');
 
 server.on('listening', async () => {
   // console.log('connection from Listening event: ', connection);
   console.log('Server is running');
-  const replica = createReplica();
+  const replica = setReplica();
   if (replica !== null) {
     await handshakeProcess(replica);
 

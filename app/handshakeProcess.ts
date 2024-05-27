@@ -1,5 +1,5 @@
 import * as net from 'net';
-import { writeAsync } from './writeAsync';
+import { writeAsync } from './functions/writeAsync';
 
 //TODO: const reply = await writeAsync('message')
 export async function handshakeProcess(slaveClient: net.Socket) {

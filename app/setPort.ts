@@ -1,4 +1,4 @@
-export function setUpPort() {
+export function setPort() {
   const indexOfPortFlag = process.argv.indexOf('--port');
 
   let port = 6379;

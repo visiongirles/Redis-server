@@ -1,5 +1,5 @@
 import { describe, expect, test } from '@jest/globals';
-import { parseBulkString } from './parseBulkString';
+import { parseBulkString } from '../parseBulkString';
 
 describe('Parse one argument', () => {
   const echoPingBuffer = Buffer.from(`$4\r\nPING\r\n`);

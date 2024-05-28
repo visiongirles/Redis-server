@@ -31,10 +31,10 @@ export async function handleHandshakeProcess(slaveClient: net.Socket) {
     // slaveClient.end();
     console.log('[replyToConfigPartTwo]: ', replyToConfigPartTwo.toString());
 
-    const replyToPsync = await writeAsync(psync, slaveClient);
-    console.log(
-      '[replyToPsync]: ',
-      replyToPsync.toString().replaceAll('\r\n', '\\r\\n')
-    );
+    await writeAsync(psync, slaveClient);
+    // console.log(
+    //   '[replyToPsync]: ',
+    //   replyToPsync.toString().replaceAll('\r\n', '\\r\\n')
+    // );
   } catch (error) {}
 }

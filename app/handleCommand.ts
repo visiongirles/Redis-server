@@ -225,10 +225,15 @@ export async function handleCommand(
       break;
     }
     case 'KEYS': {
+      // const option = commandArguments[1];
+      // console.log('[KEYS] option: ', option);
+      // if (option === '*') {
+
+      // }
       const rdb = parseRDBfile(configPath.dir, configPath.dbfilename);
       const keysIterator = rdb.hashmap.keys();
-      const firstKey = keysIterator.next().value;
-      const response = setRESPArray(firstKey);
+      // const firstKey = keysIterator.next().value;
+      const response = setRESPArray(...keysIterator);
       setStore(rdb.hashmap);
       connection.write(response);
       break;

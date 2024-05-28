@@ -83,13 +83,12 @@ export async function handleCommand(
       break;
     }
     case 'GET': {
-      console.log('INSIDE GET');
       const key = commandArguments[1];
-      console.log('key', key);
+      // console.log('key', key);
 
       // check expiry
       const data = store.get(key);
-      console.log('data: ', data);
+      // console.log('data: ', data);
       if (!data) {
         console.log('[GET]: no key');
         connection.write(nullBulkString);
@@ -231,10 +230,10 @@ export async function handleCommand(
 
       // }
       const rdb = parseRDBfile(configPath.dir, configPath.dbfilename);
-      const keysIterator = rdb.hashmap.keys();
+      const keysIterator = rdb.store.keys();
       // const firstKey = keysIterator.next().value;
       const response = setRESPArray(...keysIterator);
-      setStore(rdb.hashmap);
+      setStore(rdb.store);
       connection.write(response);
       break;
     }

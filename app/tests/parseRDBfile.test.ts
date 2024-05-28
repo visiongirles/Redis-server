@@ -16,7 +16,7 @@ describe('Parse RDB file', () => {
     databaseID: 0,
     fa: fa,
     fb: [1, 0],
-    hashmap: hashmap,
+    store: hashmap,
     title: 'REDIS',
   };
   test(`Parse RDB file`, () => {
@@ -40,7 +40,7 @@ describe('Parse RDB file with apple and raspberry', () => {
     databaseID: 0,
     fa: fa,
     fb: [1, 0],
-    hashmap: hashmap,
+    store: hashmap,
     title: 'REDIS',
   };
   test(`Parse RDB file`, () => {

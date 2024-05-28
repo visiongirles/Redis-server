@@ -1,4 +1,4 @@
-import { getStringSize } from './parseRDBfile';
+import { getStringSize } from './getStringSize';
 
 export function getString(content: Buffer, offset: number) {
   const keyResult = getStringSize(content, offset);

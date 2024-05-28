@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { getString } from './getString';
+import { getStringSize } from './getStringSize';
 
 export function parseRDBfile(dir: string, dbfilename: string): RDB {
   // export function parseRDBfile(contentBase64: string): RDB {
@@ -21,7 +22,7 @@ export function parseRDBfile(dir: string, dbfilename: string): RDB {
   //reads file
   // const contentBase64 = fs.readFileSync(filePath, 'utf8');
   const content = fs.readFileSync(filePath);
-  console.log('[parseRDBfile]: content: ', content);
+  // console.log('[parseRDBfile]: content: ', content);
 
   // const content = Buffer.from(contentBase64, 'base64');
 
@@ -69,6 +70,8 @@ export function parseRDBfile(dir: string, dbfilename: string): RDB {
   }
   offset += 1;
   const databaseID = Number(content[offset]);
+  console.log('[parseRDBfile]: databaseID: ', databaseID);
+
   offset += 1;
 
   // get resizedb field
@@ -80,11 +83,30 @@ export function parseRDBfile(dir: string, dbfilename: string): RDB {
     fb.sizeExpireHashTable = Number(content[offset]);
     offset += 1;
   }
+  console.log('[parseRDBfile]: fb: ', fb);
 
   // get ket-value for current db selector
-  let feArray = new Map();
+  let store = new Map();
 
   while (content[offset] !== 0xfe && content[offset] !== 0xff) {
+    let expiry = null;
+    switch (content[offset]) {
+      case 0xfc: {
+        offset += 1;
+        expiry = Number(content.readBigUInt64LE(offset));
+        console.log('0xfc offset + 8', expiry);
+        offset += 8;
+        break;
+      }
+      case 0xfd: {
+        offset += 1;
+        expiry = Number(content.readUInt32LE(offset)) * 1000;
+        console.log('0xfd offset + 4', expiry);
+        offset += 4;
+        break;
+      }
+    }
+
     const type = content[offset];
     offset += 1;
 
@@ -104,8 +126,10 @@ export function parseRDBfile(dir: string, dbfilename: string): RDB {
         throw Error(`Key-value parsing, TYPE ${type} not implement`);
     }
 
-    feArray.set(key, value);
+    store.set(key, { value: value, timeToLive: expiry });
   }
+  console.log('[parseRDBfile]: store: ', store);
+
   // TODO: selector db сделать чтобы остальные бд тоже парсилась
   const rdb = new RDB(
     redis,
@@ -113,7 +137,7 @@ export function parseRDBfile(dir: string, dbfilename: string): RDB {
     faArray,
     databaseID,
     [fb.sizeHashTable, fb.sizeExpireHashTable],
-    feArray
+    store
   );
   return rdb;
 }
@@ -123,64 +147,21 @@ export class RDB {
   fa: Map<string, string>;
   databaseID: number;
   fb: number[];
-  hashmap: Map<string, any>;
+  store: Map<string, any>;
+
   constructor(
     title: string,
     RDBversionNumber: number,
     fa: Map<string, string>,
     databaseID: number,
     fb: number[],
-    hashmap: Map<string, any>
+    store: Map<string, any>
   ) {
     this.title = title;
     this.RDBversionNumber = RDBversionNumber;
     this.fa = fa; // TODO: ?! копировать через .map метод
     this.databaseID = databaseID;
     this.fb = fb;
-    this.hashmap = hashmap;
-  }
-}
-
-interface StringSizeResult {
-  stringSize: number;
-  size: number;
-}
-
-export function getStringSize(
-  content: Buffer,
-  offset: number
-): StringSizeResult {
-  let stringLength = 0;
-  const currentByte = content[offset];
-
-  switch (currentByte >> 6) {
-    case 0: {
-      stringLength = currentByte;
-
-      return { stringSize: stringLength, size: 1 };
-    }
-    case 1: {
-      // 0100000001010101 потеряем если будет больше 53х бит а у нас пока 14
-      // TODO: little Endian? или не надо, т.к. два бита зануляются
-      const nextByte = content[offset + 1];
-      stringLength = (nextByte << 8) | (currentByte & 0b00111111);
-      // stringLength = ((currentByte & 0b00111111) << 8) | nextByte;
-      return { stringSize: stringLength, size: 2 };
-    }
-    case 2: {
-      stringLength =
-        (content[offset + 4] << (8 * 3)) |
-        (content[offset + 3] << (8 * 2)) |
-        (content[offset + 2] << 8) |
-        content[offset + 1];
-      return { stringSize: stringLength, size: 5 };
-    }
-    case 3: {
-      return { stringSize: -1, size: 2 };
-      // throw Error('[case 0x11]: has not been implemented yet');
-    }
-
-    default:
-      throw Error('[default]: got default case - nothing happend, wrong byte?');
+    this.store = store;
   }
 }

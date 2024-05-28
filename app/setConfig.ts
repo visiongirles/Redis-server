@@ -15,6 +15,7 @@ export function setConfig() {
 
   if (configPath.dir !== '' && configPath.dbfilename !== '') {
     const rdb = parseRDBfile(configPath.dir, configPath.dbfilename);
-    setStore(rdb.hashmap);
+
+    setStore(rdb.store);
   }
 }

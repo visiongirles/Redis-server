@@ -1,7 +1,7 @@
-import { listOfReplicas } from './constants/listOfReplicas';
+import { replicasList } from './constants/replicasList';
 
 export function propagateCommandToReplicas(data: string | Buffer) {
-  listOfReplicas.forEach((replica) => {
+  replicasList.forEach((replica) => {
     replica.write(data);
     // console.log('[propagateCommandToReplicas]: ', replica);
   });

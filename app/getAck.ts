@@ -1,4 +1,4 @@
-import { listOfReplicas } from './constants/listOfReplicas';
+import { replicasList } from './constants/replicasList';
 
 export function getAck(
   data: string | Buffer,
@@ -6,7 +6,7 @@ export function getAck(
 ): Promise<Buffer[]> {
   const promises: Promise<Buffer>[] = [];
 
-  listOfReplicas.forEach((replica) => {
+  replicasList.forEach((replica) => {
     replica.write(data);
 
     const promise: Promise<Buffer> = new Promise((resolve, reject) => {

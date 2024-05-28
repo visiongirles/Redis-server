@@ -11,12 +11,13 @@ import { store } from './constants/store';
 import { setPsyncResponse } from './setPsyncResponse';
 import { setRDBfileResponse } from './setRDBfileResponse';
 import { isMasterServer } from './isMasterServer';
-import { listOfReplicas } from './constants/listOfReplicas';
+import { replicasList } from './constants/replicasList';
 import { propagateCommandToReplicas } from './propagateCommandToReplicas';
 import { configPath, serverInfo } from './constants/config';
 import { getAck } from './getAck';
 import { setRESPArray } from './setRESPArray';
 import { parseRDBfile } from './parseRDBfile';
+import { setStore } from './setStore';
 
 export async function handleCommand(
   data: Buffer,
@@ -82,12 +83,15 @@ export async function handleCommand(
       break;
     }
     case 'GET': {
+      console.log('INSIDE GET');
       const key = commandArguments[1];
+      console.log('key', key);
 
       // check expiry
       const data = store.get(key);
-
+      console.log('data: ', data);
       if (!data) {
+        console.log('[GET]: no key');
         connection.write(nullBulkString);
         break;
       }
@@ -99,6 +103,8 @@ export async function handleCommand(
 
         if (isExpired) {
           store.delete(key);
+          console.log('[GET]: expired key');
+
           connection.write(nullBulkString);
           break;
         }
@@ -142,7 +148,7 @@ export async function handleCommand(
       const rdb = setRDBfileResponse();
       connection.write(rdb);
 
-      listOfReplicas.add(connection);
+      replicasList.add(connection);
 
       // const replconfGetack = `*3\r\n$8\r\nREPLCONF\r\n$6\r\nGETACK\r\n`;
       // connection.write(replconfGetack);
@@ -186,7 +192,7 @@ export async function handleCommand(
 
         const response =
           serverInfo.master_repl_offset === 0
-            ? listOfReplicas.size
+            ? replicasList.size
             : numberOfAliveReplicas.length;
 
         console.log(`Active replicas count: `, numberOfAliveReplicas.length);
@@ -223,6 +229,7 @@ export async function handleCommand(
       const keysIterator = rdb.hashmap.keys();
       const firstKey = keysIterator.next().value;
       const response = setRESPArray(firstKey);
+      setStore(rdb.hashmap);
       connection.write(response);
       break;
     }

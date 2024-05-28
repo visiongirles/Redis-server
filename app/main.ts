@@ -4,7 +4,7 @@ import { setPort } from './setPort';
 import { parseBuffer } from './parseBuffer';
 import { handleCommand } from './handleCommand';
 import { clearBuffer } from './functions/clearBuffer';
-import { handshakeProcess } from './handshakeProcess';
+import { handleHandshakeProcess } from './handleHandshakeProcess';
 import { setReplicaHandler } from './setReplicaHandler';
 import { setConfig } from './setConfig';
 
@@ -65,7 +65,7 @@ server.on('listening', async () => {
   console.log('Server is running');
   const replica = setReplica();
   if (replica !== null) {
-    await handshakeProcess(replica);
+    await handleHandshakeProcess(replica);
 
     setReplicaHandler(replica);
   }

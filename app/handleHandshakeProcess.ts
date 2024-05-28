@@ -2,7 +2,7 @@ import * as net from 'net';
 import { writeAsync } from './functions/writeAsync';
 
 //TODO: const reply = await writeAsync('message')
-export async function handshakeProcess(slaveClient: net.Socket) {
+export async function handleHandshakeProcess(slaveClient: net.Socket) {
   const ping = '*1\r\n$4\r\nPING\r\n';
   const replicaConfigFirst =
     '*3\r\n$8\r\nREPLCONF\r\n$14\r\nlistening-port\r\n$4\r\n6380\r\n';

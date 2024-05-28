@@ -6,6 +6,15 @@ export function parseRDBfile(dir: string, dbfilename: string): RDB {
   // export function parseRDBfile(contentBase64: string): RDB {
   const filePath = path.resolve(dir, dbfilename);
 
+  if (!fs.existsSync(filePath))
+    return new RDB(
+      '',
+      -1,
+      new Map<string, string>(),
+      -1,
+      [],
+      new Map<string, any>()
+    );
   //checks read permission
   fs.accessSync(filePath, fs.constants.R_OK);
 

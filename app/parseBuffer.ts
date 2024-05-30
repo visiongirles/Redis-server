@@ -5,6 +5,13 @@ const indexOfSucess = 0;
 const indexOfBulkString = 1;
 const indexOfOffset = 2;
 
+interface ParsedBuffer {
+  isSuccess: boolean;
+  command: string;
+  options: string[];
+  offset: number;
+}
+
 function isFirstArgumentArray(buffer: Buffer) {
   return buffer[0] == '*'.charCodeAt(0);
 }
@@ -13,11 +20,23 @@ function isCommandHasOptions(numberOfArgumentsLeft: number) {
   return numberOfArgumentsLeft !== 0;
 }
 
+interface parsedOptions {
+  isSucess: boolean;
+  options: string[];
+  offset: number;
+}
+
+const parsedOptionsFailure: parsedOptions = {
+  isSucess: false,
+  options: [],
+  offset: 0,
+};
+
 function parseOptions(
   argumentsCount: number,
   buffer: Buffer,
   offset: number
-): [boolean, string[], number] {
+): parsedOptions {
   let options: string[] = [];
   while (argumentsCount !== 0) {
     const optionsParseResult = parseBulkString(buffer, offset);
@@ -25,28 +44,45 @@ function parseOptions(
     const option = optionsParseResult[indexOfBulkString];
     offset = optionsParseResult[indexOfOffset];
     if (!isSuccessOptions) {
-      return [isSuccessOptions, [], 0];
+      return parsedOptionsFailure;
     }
     argumentsCount--;
     options.push(option);
   }
-  return [true, options, offset];
+  return { isSucess: true, options, offset };
 }
 
 //TODO: заменить флаг isSucess  на null и
 // и вернуть помимо массива с распарсенной командой, новый оффсет
 // потом подумать если пришло полторы команды
-export function parseBuffer(buffer: Buffer): [boolean, string[], number] {
+
+const parsedBufferFailure = {
+  isSuccess: false,
+  command: '',
+  options: [],
+  offset: 0,
+};
+
+export function parseBuffer(buffer: Buffer): ParsedBuffer {
   // local constants
 
   const isSuccess = true;
 
   let offset = 0;
 
-  if (!isFirstArgumentArray(buffer)) return [!isSuccess, [], 0];
+  if (!isFirstArgumentArray(buffer)) {
+    console.log(
+      '[parseBuffer] isFirstArgumentArray is NOT array: isSuccess = false'
+    );
+    return parsedBufferFailure;
+  }
 
   const indexArgumentCountEnd = buffer.indexOf(escapeSymbols);
-  if (indexArgumentCountEnd === -1) return [!isSuccess, [], 0];
+  if (indexArgumentCountEnd === -1) {
+    console.log('[parseBuffer] indexArgumentCountEnd is -1: isSuccess = false');
+
+    return parsedBufferFailure;
+  }
 
   // console.log('indexArgumentCountEnd: ', indexArgumentCountEnd);
 
@@ -58,19 +94,24 @@ export function parseBuffer(buffer: Buffer): [boolean, string[], number] {
   // console.log('argumentsCount: ', argumentsCount);
 
   if (offset >= buffer.length) {
-    return [!isSuccess, [], 0];
+    console.log('[parseBuffer] offset >= buffer.length: isSuccess = false');
+
+    return parsedBufferFailure;
   }
 
   // Parse the command
 
   const commandParseResult = parseBulkString(buffer, offset);
   const isSuccessResult = commandParseResult[indexOfSucess];
-  const command = commandParseResult[indexOfBulkString];
+  const command = commandParseResult[indexOfBulkString].toUpperCase();
+  console.log('[parseBuffer] command', command);
   offset = commandParseResult[indexOfOffset];
   argumentsCount--;
 
   if (!isSuccessResult) {
-    return [isSuccessResult, [], 0];
+    console.log('[commandParseResult] cannot find command: isSuccess = false');
+
+    return parsedBufferFailure;
   }
 
   switch (command) {
@@ -83,26 +124,43 @@ export function parseBuffer(buffer: Buffer): [boolean, string[], number] {
     case 'INFO':
     case 'WAIT':
     case 'REPLCONF':
-    case 'KEYS': {
+    case 'KEYS':
+    case 'TYPE': {
       if (!isCommandHasOptions(argumentsCount)) {
         console.log('Options parse result: ', isSuccess, command);
-
-        return [isSuccess, [command], offset];
+        return {
+          isSuccess,
+          command,
+          options: [],
+          offset,
+        };
       }
 
       const optionsParseResult = parseOptions(argumentsCount, buffer, offset);
-      const isSuccessResult = optionsParseResult[indexOfSucess];
-      const options = optionsParseResult[indexOfBulkString];
-      offset = optionsParseResult[indexOfOffset];
-      console.log('Options parse result: ', isSuccessResult);
+      const isSuccessResult = optionsParseResult.isSucess;
+      const options = optionsParseResult.options;
+      offset = optionsParseResult.offset;
+      // console.log('Options parse result: ', isSuccessResult);
       if (!isSuccessResult) {
-        return [!isSuccess, [], 0];
+        console.log('Options parse result: ', isSuccess, command);
+
+        return parsedBufferFailure;
       }
-      return [isSuccess, [command, ...options], offset];
+      return {
+        isSuccess,
+        command,
+        options,
+        offset,
+      };
     }
 
     default: {
-      return [!isSuccess, [], 0];
+      console.log(
+        '[parseBuffer]: DEFAULT command, ' +
+          command +
+          ' has not implemented yet'
+      );
+      return parsedBufferFailure;
     }
   }
 }

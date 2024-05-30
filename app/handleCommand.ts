@@ -1,12 +1,7 @@
 import * as net from 'net';
 import { setPingResponse } from './setPingResponse';
 import { getInfoReplicationResponse } from './getInfoReplicationResponse';
-import {
-  bulkString,
-  escapeSymbols,
-  nullBulkString,
-  simpleString,
-} from './constants/constants';
+import { bulkString, escapeSymbols, simpleString } from './constants/constants';
 import { store } from './constants/store';
 import { setPsyncResponse } from './setPsyncResponse';
 import { setRDBfileResponse } from './setRDBfileResponse';
@@ -18,11 +13,13 @@ import { getAck } from './getAck';
 import { setRESPArray } from './setRESPArray';
 import { parseRDBfile } from './parseRDBfile';
 import { setStore } from './setStore';
+import { setGetResponse } from './setGetResponse';
+import { getValueByKey } from './getValueByKey';
 
 export async function handleCommand(
   data: Buffer,
   command: string,
-  commandArguments: string[],
+  commandOptions: string[],
   connection: net.Socket
 ) {
   switch (command) {
@@ -32,7 +29,7 @@ export async function handleCommand(
     }
     case 'ECHO': {
       //все кроме команды склеить в строку
-      const echo = commandArguments[1];
+      const echo = commandOptions[0];
 
       const data =
         bulkString + echo.length + escapeSymbols + echo + escapeSymbols;
@@ -41,13 +38,13 @@ export async function handleCommand(
       break;
     }
     case 'SET': {
-      const key = commandArguments[1];
-      const value = commandArguments[2];
+      const key = commandOptions[0];
+      const value = commandOptions[1];
       console.log('[SET] role of server: ', serverInfo.role);
 
       // check if there are any OPTIONS
       const minimumOptions = 4;
-      if (commandArguments.length < minimumOptions) {
+      if (commandOptions.length < minimumOptions) {
         // if no OPTIONS
         store.set(key, { value: value, timeToLive: null });
         if (isMasterServer()) {
@@ -60,12 +57,12 @@ export async function handleCommand(
         break;
       }
 
-      const options = commandArguments[3];
+      const options = commandOptions[2];
       // console.log('options: ', options);
       if (options === 'px') {
         // shift to the next array element
 
-        const expiry = Number(commandArguments[4]);
+        const expiry = Number(commandOptions[3]);
 
         const timeToLive = Date.now() + expiry;
         store.set(key, { value: value, timeToLive: timeToLive });
@@ -83,43 +80,11 @@ export async function handleCommand(
       break;
     }
     case 'GET': {
-      const key = commandArguments[1];
-      // console.log('key', key);
-
-      // check expiry
-      const data = store.get(key);
-      // console.log('data: ', data);
-      if (!data) {
-        console.log('[GET]: no key');
-        connection.write(nullBulkString);
-        break;
-      }
-
-      const expiry = data.timeToLive;
-
-      if (expiry) {
-        const isExpired = expiry < Date.now();
-
-        if (isExpired) {
-          store.delete(key);
-          console.log('[GET]: expired key');
-
-          connection.write(nullBulkString);
-          break;
-        }
-      }
-
-      const value = data.value;
-
-      const respond = value
-        ? bulkString + value.length + escapeSymbols + value + escapeSymbols
-        : nullBulkString;
-      connection.write(respond);
-
+      setGetResponse(commandOptions[0], connection);
       break;
     }
     case 'INFO': {
-      let options = commandArguments[1];
+      let options = commandOptions[0];
       // console.log('INFO argument is :', options);
 
       switch (options) {
@@ -155,8 +120,8 @@ export async function handleCommand(
     }
 
     case 'REPLCONF': {
-      let options = commandArguments[1];
-
+      let options = commandOptions[0];
+      console.log('Hi', options);
       switch (options) {
         case 'GETACK': {
           const response = `*3\r\n$8\r\nREPLCONF\r\n$3\r\nACK\r\n$${
@@ -178,7 +143,7 @@ export async function handleCommand(
     }
     case 'WAIT': {
       // const countFromArgument = Number(commandArguments[1]);
-      const timeout = Number(commandArguments[2]);
+      const timeout = Number(commandOptions[1]);
       // const count = listOfReplicas.size;
       const data = `*3\r\n$8\r\nREPLCONF\r\n$6\r\nGETACK\r\n$1\r\n*\r\n`;
 
@@ -212,10 +177,10 @@ export async function handleCommand(
       break;
     }
     case 'CONFIG': {
-      const option = commandArguments[1];
+      const option = commandOptions[0];
       switch (option) {
         case 'GET': {
-          const argument: string = commandArguments[2];
+          const argument: string = commandOptions[1];
           const response = setRESPArray(argument, configPath[argument]);
           connection.write(response);
           break;
@@ -237,7 +202,31 @@ export async function handleCommand(
       connection.write(response);
       break;
     }
+    case 'TYPE': {
+      console.log('[handleCommand TYPE] key:', commandOptions[0]);
+      const value = getValueByKey(commandOptions[0]);
+      if (value === null) {
+        connection.write('+none\r\n');
+        break;
+      }
+
+      switch (typeof value) {
+        case 'string': {
+          connection.write('+string\r\n');
+          break;
+        }
+
+        default: {
+          const notImplementedType = typeof value;
+          throw Error(
+            `[TYPE command], TYPE ${notImplementedType} not implement`
+          );
+        }
+      }
+      break;
+    }
     default: {
+      console.log('[handleCommand] default case:with command', command);
       connection.write('+OK' + escapeSymbols);
     }
   }

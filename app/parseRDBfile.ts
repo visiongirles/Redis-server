@@ -22,7 +22,7 @@ export function parseRDBfile(dir: string, dbfilename: string): RDB {
   //reads file
   // const contentBase64 = fs.readFileSync(filePath, 'utf8');
   const content = fs.readFileSync(filePath);
-  // console.log('[parseRDBfile]: content: ', content);
+  console.log('[parseRDBfile]: content: ', content);
 
   // const content = Buffer.from(contentBase64, 'base64');
 
@@ -86,7 +86,7 @@ export function parseRDBfile(dir: string, dbfilename: string): RDB {
   console.log('[parseRDBfile]: fb: ', fb);
 
   // get ket-value for current db selector
-  let store = new Map();
+  let store: Map<string, { value: any; timeToLive: number | null }> = new Map();
 
   while (content[offset] !== 0xfe && content[offset] !== 0xff) {
     let expiry = null;

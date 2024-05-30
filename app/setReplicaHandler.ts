@@ -5,34 +5,34 @@ import { handleCommand } from './handleCommand';
 import { parseBuffer } from './parseBuffer';
 import { getRDBfile } from './getRDBfile';
 
-export const setReplicaHandler = (slaveClient: net.Socket) => {
-  let clientBuffer: Buffer = Buffer.alloc(0);
-  slaveClient.on('data', (data: Buffer) => {
-    clientBuffer = Buffer.concat([clientBuffer, data]);
+export const setReplicaHandler = (replica: net.Socket) => {
+  let replicaBuffer: Buffer = Buffer.alloc(0);
+  replica.on('data', (data: Buffer) => {
+    replicaBuffer = Buffer.concat([replicaBuffer, data]);
 
-    clientBuffer = getRDBfile(clientBuffer);
+    replicaBuffer = getRDBfile(replicaBuffer);
 
-    while (clientBuffer.length > 0) {
+    while (replicaBuffer.length > 0) {
       console.log(
         '[Replica buffer]: ',
-        clientBuffer.toString().replaceAll('\r\n', '\\r\\n')
+        replicaBuffer.toString().replaceAll('\r\n', '\\r\\n')
       );
 
-      const result = parseBuffer(clientBuffer);
+      const result = parseBuffer(replicaBuffer);
       console.log('[Replica parse result]: ', result);
-      const isSuccess: boolean = result[0];
+      const isSuccess: boolean = result.isSuccess;
       if (!isSuccess) break;
 
-      const commandAndArguments: string[] = result[1];
-      const command = commandAndArguments[0];
-      const offset = result[2];
+      const commandOptions: string[] = result.options;
+      const command = result.command;
+      const offset = result.offset;
       if (command === 'GET' || command === 'SET' || command === 'REPLCONF') {
-        handleCommand(data, command, commandAndArguments, slaveClient);
+        handleCommand(data, command, commandOptions, replica);
       }
 
       serverInfo.master_repl_offset += offset;
 
-      clientBuffer = clearBuffer(clientBuffer, offset);
+      replicaBuffer = clearBuffer(replicaBuffer, offset);
     }
   });
 };

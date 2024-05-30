@@ -22,16 +22,19 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
 
     while (buffer.length > 0) {
       const result = parseBuffer(buffer);
-      const isSuccess: boolean = result[0];
-      // console.log(
-      //   '[Buffer AFTER parsing]:',
-      //   buffer.toString().replaceAll('\r\n', ' ')
-      // );
+
+      const isSuccess: boolean = result.isSuccess;
+      console.log('[parseBuffer] isSucess', isSuccess);
+      console.log(
+        '[Buffer AFTER parsing]:',
+        buffer.toString().replaceAll('\r\n', ' ')
+      );
       if (!isSuccess) break;
 
-      const commandAndArguments: string[] = result[1];
-      const command = commandAndArguments[0];
-      const offset = result[2];
+      const commandOptions: string[] = result.options;
+      const command = result.command.toLocaleUpperCase();
+      console.log('[main.ts] command', command);
+      const offset = result.offset;
 
       const dataForReplica = buffer.subarray(0, offset);
 
@@ -43,7 +46,7 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
         '[data for replica]: ',
         dataForReplica.toString().replaceAll('\r\n', '\\r\\n')
       );
-      handleCommand(dataForReplica, command, commandAndArguments, connection);
+      handleCommand(dataForReplica, command, commandOptions, connection);
       // serverInfo.master_repl_offset += offset;
       buffer = clearBuffer(buffer, offset);
 
@@ -63,6 +66,8 @@ server.listen(setPort(), '127.0.0.1');
 server.on('listening', async () => {
   // console.log('connection from Listening event: ', connection);
   console.log('Server is running');
+
+  // console.log(bufferForTestInBytes);
   const replica = setReplica();
   if (replica !== null) {
     await handleHandshakeProcess(replica);

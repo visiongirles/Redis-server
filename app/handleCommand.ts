@@ -16,6 +16,7 @@ import { setStore } from './setStore';
 import { setGetResponse } from './setGetResponse';
 import { getValueByKey } from './getValueByKey';
 import { setXADDResponse } from './setXADDResponse';
+import { validateStreamId, isStreamIdEqualsDefault } from './validateStreamId';
 
 export async function handleCommand(
   data: Buffer,
@@ -196,7 +197,7 @@ export async function handleCommand(
 
       // }
       const rdb = parseRDBfile(configPath.dir, configPath.dbfilename);
-      const keysIterator = rdb.store.keys();
+      const keysIterator = Array.from(rdb.store.keys());
       // const firstKey = keysIterator.next().value;
       const response = setRESPArray(...keysIterator);
       setStore(rdb.store);
@@ -205,10 +206,23 @@ export async function handleCommand(
     }
     case 'XADD': {
       const [mainKey, id, key, value] = commandOptions;
+
       console.log('[XADD] title, id, key, value: ', mainKey, id, key, value);
-      const stream: Stream = { id: id, key: key, value: value };
-      store.set(mainKey, { value: stream, timeToLive: null });
-      setXADDResponse(id, connection);
+
+      if (isStreamIdEqualsDefault(id)) {
+        const error = `-ERR The ID specified in XADD must be greater than 0-0\r\n`;
+        connection.write(error);
+        break;
+      }
+
+      if (validateStreamId(id)) {
+        const stream: Stream = { id: id, key: key, value: value };
+        store.set(mainKey, { value: stream, timeToLive: null });
+        setXADDResponse(id, connection);
+        break;
+      }
+      const error = `-ERR The ID specified in XADD is equal or smaller than the target stream top item\r\n`;
+      connection.write(error);
       break;
     }
     case 'TYPE': {

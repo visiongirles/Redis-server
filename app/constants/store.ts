@@ -6,6 +6,10 @@ interface Value {
   value: string | Stream;
   timeToLive: number | null;
 }
+// interface Value {
+//   value: string | Stream;
+//   timeToLive: number | null;
+// }
 
 export interface Stream {
   id: string;
@@ -17,3 +21,8 @@ export interface Stream {
 //  struct Value { value: ValueWrapper, expires_at: u128, }
 //  enum ValueWrapper { String(String), Stream(Stream), }
 // struct Stream { map: BTreeMap<StreamKey, Vec<String>>, subscribe: Sender<StreamKey>, }
+
+enum StoreValue {
+  String,
+  Stream,
+}

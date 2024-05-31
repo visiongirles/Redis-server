@@ -125,7 +125,8 @@ export function parseBuffer(buffer: Buffer): ParsedBuffer {
     case 'WAIT':
     case 'REPLCONF':
     case 'KEYS':
-    case 'TYPE': {
+    case 'TYPE':
+    case 'XADD': {
       if (!isCommandHasOptions(argumentsCount)) {
         console.log('Options parse result: ', isSuccess, command);
         return {

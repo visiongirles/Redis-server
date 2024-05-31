@@ -2,7 +2,7 @@ import * as net from 'net';
 import { setPingResponse } from './setPingResponse';
 import { getInfoReplicationResponse } from './getInfoReplicationResponse';
 import { bulkString, escapeSymbols, simpleString } from './constants/constants';
-import { store } from './constants/store';
+import { Stream, store } from './constants/store';
 import { setPsyncResponse } from './setPsyncResponse';
 import { setRDBfileResponse } from './setRDBfileResponse';
 import { isMasterServer } from './isMasterServer';
@@ -15,6 +15,7 @@ import { parseRDBfile } from './parseRDBfile';
 import { setStore } from './setStore';
 import { setGetResponse } from './setGetResponse';
 import { getValueByKey } from './getValueByKey';
+import { setXADDResponse } from './setXADDResponse';
 
 export async function handleCommand(
   data: Buffer,
@@ -202,8 +203,21 @@ export async function handleCommand(
       connection.write(response);
       break;
     }
+    case 'XADD': {
+      const [mainKey, id, key, value] = commandOptions;
+      console.log('[XADD] title, id, key, value: ', mainKey, id, key, value);
+      const stream: Stream = { id: id, key: key, value: value };
+      store.set(mainKey, { value: stream, timeToLive: null });
+      setXADDResponse(id, connection);
+      break;
+    }
     case 'TYPE': {
       console.log('[handleCommand TYPE] key:', commandOptions[0]);
+      // if (streamStore.get(commandOptions[0])) {
+      //   connection.write('+stream\r\n');
+      //   break;
+      // }
+
       const value = getValueByKey(commandOptions[0]);
       if (value === null) {
         connection.write('+none\r\n');
@@ -211,6 +225,10 @@ export async function handleCommand(
       }
 
       switch (typeof value) {
+        case 'object': {
+          connection.write('+stream\r\n');
+          break;
+        }
         case 'string': {
           connection.write('+string\r\n');
           break;

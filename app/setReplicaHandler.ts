@@ -15,7 +15,7 @@ export const setReplicaHandler = (replica: net.Socket) => {
     while (replicaBuffer.length > 0) {
       console.log(
         '[Replica buffer]: ',
-        replicaBuffer.toString().replaceAll('\r\n', '\\r\\n')
+        replicaBuffer.toString().replace('\r\n', '\\r\\n')
       );
 
       const result = parseBuffer(replicaBuffer);

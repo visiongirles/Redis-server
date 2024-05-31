@@ -13,7 +13,11 @@ export function setGetResponse(key: string, connection: net.Socket) {
     connection.write(nullBulkString);
   } else {
     const respond = value
-      ? bulkString + value.length + escapeSymbols + value + escapeSymbols
+      ? bulkString +
+        String(value).length +
+        escapeSymbols +
+        value +
+        escapeSymbols
       : nullBulkString;
     connection.write(respond);
   }

@@ -123,7 +123,6 @@ export async function handleCommand(
 
     case 'REPLCONF': {
       let options = commandOptions[0];
-      console.log('Hi', options);
       switch (options) {
         case 'GETACK': {
           const response = `*3\r\n$8\r\nREPLCONF\r\n$3\r\nACK\r\n$${

@@ -1,4 +1,4 @@
-import { Stream, store } from './constants/store';
+import { store } from './constants/store';
 
 const defaultId = { timeInMs: 0, count: 0 };
 

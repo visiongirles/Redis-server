@@ -287,7 +287,7 @@ export async function handleCommand(
 
       if (validateStreamId(parsedStreamId, value)) {
         const stream: Stream = {
-          id: streamId,
+          id: parsedStreamId,
           key: newStreamKey,
           value: newStreamValue,
         };

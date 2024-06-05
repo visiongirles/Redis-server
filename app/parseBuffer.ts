@@ -52,10 +52,6 @@ function parseOptions(
   return { isSucess: true, options, offset };
 }
 
-//TODO: заменить флаг isSucess  на null и
-// и вернуть помимо массива с распарсенной командой, новый оффсет
-// потом подумать если пришло полторы команды
-
 const parsedBufferFailure = {
   isSuccess: false,
   command: '',

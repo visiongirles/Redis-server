@@ -1,28 +1,28 @@
 // export const store: Map<string, storeValue> = new Map();
 
-export const store: Map<string, Value> = new Map();
+// export const store: Store = {
+//   lastStreamEntry: null,
+//   entries: new Map(),
+// };
 
-interface Value {
-  value: string | Stream;
+export const store = new Map<string, StoreValue>();
+
+export interface StoreValue {
+  value: any;
+  type: StoreValueType;
   timeToLive: number | null;
 }
-// interface Value {
-//   value: string | Stream;
-//   timeToLive: number | null;
-// }
 
-export interface Stream {
-  id: string;
-  key: string;
-  value: string;
-}
-
-// у меня стейт выглядит как HashMap<String, Value>
-//  struct Value { value: ValueWrapper, expires_at: u128, }
-//  enum ValueWrapper { String(String), Stream(Stream), }
-// struct Stream { map: BTreeMap<StreamKey, Vec<String>>, subscribe: Sender<StreamKey>, }
-
-enum StoreValue {
+export enum StoreValueType {
   String,
-  Stream,
+  List,
+  Set,
+  SortedSet,
+  Hash,
+  Zipmap,
+  Ziplist,
+  Insert,
+  SortedSetZiplist,
+  HashmapZiplist,
+  ListInQuicklist,
 }

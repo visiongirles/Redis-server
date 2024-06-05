@@ -11,10 +11,10 @@ describe('Parse RDB file', () => {
     ['redis-bits', 64],
   ]);
   const store = new Map<string, any>([
-    ['mango', { value: 'mango', timeToLive: null }],
-    ['apple', { value: 'grape', timeToLive: null }],
-    ['pear', { value: 'orange', timeToLive: null }],
-    ['strawberry', { value: 'banana', timeToLive: null }],
+    ['mango', { value: 'mango', timeToLive: null, type: 0 }],
+    ['apple', { value: 'grape', timeToLive: null, type: 0 }],
+    ['pear', { value: 'orange', timeToLive: null, type: 0 }],
+    ['strawberry', { value: 'banana', timeToLive: null, type: 0 }],
   ]);
   const success = new RDB('REDIS', 3, fa, 0, [4, 0], store);
 

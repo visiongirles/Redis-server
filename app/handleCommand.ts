@@ -2,7 +2,8 @@ import * as net from 'net';
 import { setPingResponse } from './setPingResponse';
 import { getInfoReplicationResponse } from './getInfoReplicationResponse';
 import { bulkString, escapeSymbols, simpleString } from './constants/constants';
-import { Stream, store } from './constants/store';
+import { StoreValueType, store } from './constants/store';
+import { Stream, streamStore } from './constants/streamStore';
 import { setPsyncResponse } from './setPsyncResponse';
 import { setRDBfileResponse } from './setRDBfileResponse';
 import { isMasterServer } from './isMasterServer';
@@ -14,9 +15,15 @@ import { setRESPArray } from './setRESPArray';
 import { parseRDBfile } from './parseRDBfile';
 import { setStore } from './setStore';
 import { setGetResponse } from './setGetResponse';
-import { getValueByKey } from './getValueByKey';
+import { getValueByKeyStore } from './getValueByKeyStore';
 import { setXADDResponse } from './setXADDResponse';
-import { validateStreamId, isStreamIdEqualsDefault } from './validateStreamId';
+import {
+  validateStreamId,
+  isStreamIdEqualsDefault,
+  parseStreamId,
+  setStreamIdToString,
+} from './validateStreamId';
+import { getValueByKeyStreamStore } from './getValueByKeyStreamStore';
 
 export async function handleCommand(
   data: Buffer,
@@ -48,7 +55,12 @@ export async function handleCommand(
       const minimumOptions = 4;
       if (commandOptions.length < minimumOptions) {
         // if no OPTIONS
-        store.set(key, { value: value, timeToLive: null });
+        store.set(key, {
+          value: value,
+          timeToLive: null,
+          type: StoreValueType.String,
+        });
+
         if (isMasterServer()) {
           const response = simpleString + 'OK' + escapeSymbols;
           connection.write(response);
@@ -67,7 +79,11 @@ export async function handleCommand(
         const expiry = Number(commandOptions[3]);
 
         const timeToLive = Date.now() + expiry;
-        store.set(key, { value: value, timeToLive: timeToLive });
+        store.set(key, {
+          value: value,
+          timeToLive: timeToLive,
+          type: StoreValueType.String,
+        });
         // console.log('[SET] key: ', key, ' value: ', store.get(key));
 
         if (isMasterServer()) {
@@ -204,20 +220,73 @@ export async function handleCommand(
       break;
     }
     case 'XADD': {
-      const [mainKey, id, key, value] = commandOptions;
+      const [key, id, newStreamKey, newStreamValue] = commandOptions;
 
-      console.log('[XADD] title, id, key, value: ', mainKey, id, key, value);
+      console.log(
+        '[XADD] stream-key, id, key, value: ',
+        key,
+        id,
+        newStreamKey,
+        newStreamValue
+      );
 
-      if (isStreamIdEqualsDefault(id)) {
+      const value = getValueByKeyStreamStore(key);
+      const streamId = parseStreamId(id);
+
+      if (!value) {
+        let newId = streamId;
+        if (streamId.count === '*') {
+          newId.count = streamId.timestamp === '0' ? '1' : '0';
+        }
+        const stream: Stream = {
+          id: newId,
+          key: newStreamKey,
+          value: newStreamValue,
+        };
+        streamStore.set(key, [stream]);
+        setXADDResponse(setStreamIdToString(newId), connection);
+        break;
+      }
+
+      if (streamId.count === '*') {
+        let newId = streamId;
+        newId.count = '0';
+
+        for (let item of value) {
+          if (item.id.timestamp === newId.timestamp) {
+            newId.count = String(Number(item.id.count) + 1);
+            break;
+          }
+        }
+
+        const stream: Stream = {
+          id: newId,
+          key: newStreamKey,
+          value: newStreamValue,
+        };
+
+        const updatedValue = [...value, stream];
+        streamStore.set(key, updatedValue);
+        setXADDResponse(setStreamIdToString(newId), connection);
+        break;
+      }
+
+      if (isStreamIdEqualsDefault(streamId)) {
         const error = `-ERR The ID specified in XADD must be greater than 0-0\r\n`;
         connection.write(error);
         break;
       }
 
-      if (validateStreamId(id)) {
-        const stream: Stream = { id: id, key: key, value: value };
-        store.set(mainKey, { value: stream, timeToLive: null });
-        setXADDResponse(id, connection);
+      if (validateStreamId(streamId, value)) {
+        const stream: Stream = {
+          id: streamId,
+          key: newStreamKey,
+          value: newStreamValue,
+        };
+        // value.push(stream); //
+        const updatedValue = [...value, stream];
+        streamStore.set(key, updatedValue);
+        setXADDResponse(setStreamIdToString(streamId), connection);
         break;
       }
       const error = `-ERR The ID specified in XADD is equal or smaller than the target stream top item\r\n`;
@@ -231,29 +300,36 @@ export async function handleCommand(
       //   break;
       // }
 
-      const value = getValueByKey(commandOptions[0]);
-      if (value === null) {
-        connection.write('+none\r\n');
+      const stream = getValueByKeyStreamStore(commandOptions[0]);
+
+      if (stream) {
+        connection.write('+stream\r\n');
         break;
       }
 
-      switch (typeof value) {
-        case 'object': {
-          connection.write('+stream\r\n');
-          break;
-        }
-        case 'string': {
-          connection.write('+string\r\n');
-          break;
-        }
+      const value = getValueByKeyStore(commandOptions[0]);
+      if (value) {
+        console.log('[GET] chceking the value:', value);
+        switch (value.type) {
+          // case 'object': {
+          //   connection.write('+stream\r\n');
+          //   break;
+          // }
+          case StoreValueType.String: {
+            connection.write('+string\r\n');
+            break;
+          }
 
-        default: {
-          const notImplementedType = typeof value;
-          throw Error(
-            `[TYPE command], TYPE ${notImplementedType} not implement`
-          );
+          default: {
+            const notImplementedType = typeof value;
+            throw Error(
+              `[TYPE command], TYPE ${notImplementedType} not implement`
+            );
+          }
         }
       }
+
+      connection.write('+none\r\n');
       break;
     }
     default: {

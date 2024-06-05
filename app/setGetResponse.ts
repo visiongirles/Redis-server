@@ -4,19 +4,19 @@ import {
   escapeSymbols,
   nullBulkString,
 } from './constants/constants';
-import { getValueByKey } from './getValueByKey';
+import { getValueByKeyStore } from './getValueByKeyStore';
 
 export function setGetResponse(key: string, connection: net.Socket) {
-  const value = getValueByKey(key);
+  const data = getValueByKeyStore(key);
 
-  if (value === null) {
+  if (data === null) {
     connection.write(nullBulkString);
   } else {
-    const respond = value
+    const respond = data.value
       ? bulkString +
-        String(value).length +
+        String(data.value).length +
         escapeSymbols +
-        value +
+        data.value +
         escapeSymbols
       : nullBulkString;
     connection.write(respond);

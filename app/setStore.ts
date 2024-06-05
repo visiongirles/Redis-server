@@ -1,12 +1,14 @@
-import { store } from './constants/store';
+import { StoreValue, store } from './constants/store';
 
-export function setStore(
-  newStore: Map<string, { value: any; timeToLive: number | null }>
-) {
+export function setStore(newStore: Map<string, StoreValue>) {
   store.clear();
-  newStore.forEach((value, key) => {
-    console.log('[setStore] value', value);
-    store.set(key, { value: value.value, timeToLive: value.timeToLive });
+  newStore.forEach((data, key) => {
+    console.log('[setStore] value', data);
+    store.set(key, {
+      value: data.value,
+      timeToLive: data.timeToLive,
+      type: data.type,
+    });
   });
   // console.log('[setStore] new store: ', store);
 }

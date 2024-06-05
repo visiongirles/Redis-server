@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { getString } from './getString';
 import { getStringSize } from './getStringSize';
+import { StoreValue, StoreValueType } from './constants/store';
 
 export function parseRDBfile(dir: string, dbfilename: string): RDB {
   // export function parseRDBfile(contentBase64: string): RDB {
@@ -28,12 +29,12 @@ export function parseRDBfile(dir: string, dbfilename: string): RDB {
 
   let offset = 0;
   // get title
-  const redis = content.subarray(offset, 5).toString(); // TODO:
+  const redis = content.subarray(offset, 5).toString();
   offset = redis.length;
   console.log('[parseRDBfile]: redis: ', redis);
 
   //get version
-  const RDBVersionNumber = Number(content.subarray(offset, offset + 4)); // TODO: сейчас в Buffer, а надо чиселку
+  const RDBVersionNumber = Number(content.subarray(offset, offset + 4));
   offset += 4;
   console.log('[parseRDBfile]: RDBVersionNumber: ', RDBVersionNumber);
 
@@ -86,7 +87,7 @@ export function parseRDBfile(dir: string, dbfilename: string): RDB {
   console.log('[parseRDBfile]: fb: ', fb);
 
   // get ket-value for current db selector
-  let store: Map<string, { value: any; timeToLive: number | null }> = new Map();
+  let store: Map<string, StoreValue> = new Map();
 
   while (content[offset] !== 0xfe && content[offset] !== 0xff) {
     let expiry = null;
@@ -115,7 +116,6 @@ export function parseRDBfile(dir: string, dbfilename: string): RDB {
     offset = keyResult.offset;
     let value;
     switch (type) {
-      // TODO: все случаи разобрать
       case 0: {
         const valueResult = getString(content, offset);
         value = valueResult.value;
@@ -126,7 +126,11 @@ export function parseRDBfile(dir: string, dbfilename: string): RDB {
         throw Error(`Key-value parsing, TYPE ${type} not implement`);
     }
 
-    store.set(key, { value: value, timeToLive: expiry });
+    store.set(key, {
+      value: value,
+      timeToLive: expiry,
+      type: StoreValueType.String,
+    });
   }
   console.log('[parseRDBfile]: store: ', store);
 

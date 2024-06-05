@@ -24,6 +24,7 @@ import {
   setStreamIdToString,
 } from './validateStreamId';
 import { getValueByKeyStreamStore } from './getValueByKeyStreamStore';
+import { setStreamId } from './setStreamId';
 
 export async function handleCommand(
   data: Buffer,
@@ -222,21 +223,28 @@ export async function handleCommand(
     case 'XADD': {
       const [key, id, newStreamKey, newStreamValue] = commandOptions;
 
-      console.log(
-        '[XADD] stream-key, id, key, value: ',
-        key,
-        id,
-        newStreamKey,
-        newStreamValue
-      );
+      // console.log(
+      //   '[XADD] stream-key, id, key, value: ',
+      //   key,
+      //   id,
+      //   newStreamKey,
+      //   newStreamValue
+      // );
 
       const value = getValueByKeyStreamStore(key);
-      const streamId = parseStreamId(id);
+
+      let streamId = id;
+
+      if (id === '*') {
+        streamId = setStreamId();
+      }
+
+      const parsedStreamId = parseStreamId(streamId);
 
       if (!value) {
-        let newId = streamId;
-        if (streamId.count === '*') {
-          newId.count = streamId.timestamp === '0' ? '1' : '0';
+        let newId = parsedStreamId;
+        if (parsedStreamId.count === '*') {
+          newId.count = parsedStreamId.timestamp === '0' ? '1' : '0';
         }
         const stream: Stream = {
           id: newId,
@@ -248,8 +256,8 @@ export async function handleCommand(
         break;
       }
 
-      if (streamId.count === '*') {
-        let newId = streamId;
+      if (parsedStreamId.count === '*') {
+        let newId = parsedStreamId;
         newId.count = '0';
 
         for (let item of value) {
@@ -271,13 +279,13 @@ export async function handleCommand(
         break;
       }
 
-      if (isStreamIdEqualsDefault(streamId)) {
+      if (isStreamIdEqualsDefault(parsedStreamId)) {
         const error = `-ERR The ID specified in XADD must be greater than 0-0\r\n`;
         connection.write(error);
         break;
       }
 
-      if (validateStreamId(streamId, value)) {
+      if (validateStreamId(parsedStreamId, value)) {
         const stream: Stream = {
           id: streamId,
           key: newStreamKey,
@@ -286,7 +294,7 @@ export async function handleCommand(
         // value.push(stream); //
         const updatedValue = [...value, stream];
         streamStore.set(key, updatedValue);
-        setXADDResponse(setStreamIdToString(streamId), connection);
+        setXADDResponse(setStreamIdToString(parsedStreamId), connection);
         break;
       }
       const error = `-ERR The ID specified in XADD is equal or smaller than the target stream top item\r\n`;

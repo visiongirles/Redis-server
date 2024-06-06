@@ -1,23 +1,25 @@
-import { Stream, StreamId, streamStore } from './constants/streamStore';
-import { getValueByKeyStreamStore } from './getValueByKeyStreamStore';
+import { StreamId, StreamValue } from './constants/streamStore';
 
 const defaultId = { timeInMs: 0, count: 0 };
 
 export function validateStreamId(
-  streamId: StreamId,
-  stream: Stream[]
+  newStreamId: StreamId,
+  streamValue: StreamValue
 ): boolean {
-  for (let index = stream.length - 1; index >= 0; index--) {
-    const lastStreamId = stream[index].id;
+  const streamIdArray = Array.from(streamValue.keys());
 
-    if (streamId.timestamp > lastStreamId.timestamp) {
-      return true;
-    } else if (streamId.timestamp === lastStreamId.timestamp) {
-      return streamId.count > lastStreamId.count ? true : false;
-    } else {
-      return false;
-    }
+  // for (let index = streamIdArray.length - 1; index >= 0; index--) {
+  const indexOfLastStream = streamIdArray.length - 1;
+  const lastStreamId = streamIdArray[indexOfLastStream];
+
+  if (newStreamId.timestamp > lastStreamId.timestamp) {
+    return true;
+  } else if (newStreamId.timestamp === lastStreamId.timestamp) {
+    return newStreamId.count > lastStreamId.count;
+  } else {
+    return false;
   }
+  // }
 }
 
 export function isStreamIdEqualsDefault(streamId: StreamId): boolean {

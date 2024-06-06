@@ -122,7 +122,8 @@ export function parseBuffer(buffer: Buffer): ParsedBuffer {
     case 'REPLCONF':
     case 'KEYS':
     case 'TYPE':
-    case 'XADD': {
+    case 'XADD':
+    case 'XRANGE': {
       if (!isCommandHasOptions(argumentsCount)) {
         console.log('Options parse result: ', isSuccess, command);
         return {

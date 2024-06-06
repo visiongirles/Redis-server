@@ -3,7 +3,7 @@ import { setPingResponse } from './setPingResponse';
 import { getInfoReplicationResponse } from './getInfoReplicationResponse';
 import { bulkString, escapeSymbols, simpleString } from './constants/constants';
 import { StoreValueType, store } from './constants/store';
-import { Stream, streamStore } from './constants/streamStore';
+import { StreamId, StreamValue, streamStore } from './constants/streamStore';
 import { setPsyncResponse } from './setPsyncResponse';
 import { setRDBfileResponse } from './setRDBfileResponse';
 import { isMasterServer } from './isMasterServer';
@@ -25,6 +25,9 @@ import {
 } from './validateStreamId';
 import { getValueByKeyStreamStore } from './getValueByKeyStreamStore';
 import { setStreamId } from './setStreamId';
+import { setStreamValue } from './setStreamValue';
+import { mergeMaps } from './mergeMap';
+import { getStreamValuesByRange } from './getStreamValuesByRange';
 
 export async function handleCommand(
   data: Buffer,
@@ -221,7 +224,12 @@ export async function handleCommand(
       break;
     }
     case 'XADD': {
-      const [key, id, newStreamKey, newStreamValue] = commandOptions;
+      const streamKey = commandOptions[0];
+      let streamId = commandOptions[1];
+      const arrayOfKeysAndValues = commandOptions.slice(
+        2,
+        commandOptions.length
+      );
 
       // console.log(
       //   '[XADD] stream-key, id, key, value: ',
@@ -231,51 +239,47 @@ export async function handleCommand(
       //   newStreamValue
       // );
 
-      const value = getValueByKeyStreamStore(key);
+      const streamValue = getValueByKeyStreamStore(streamKey);
 
-      let streamId = id;
-
-      if (id === '*') {
+      if (streamId === '*') {
         streamId = setStreamId();
       }
 
-      const parsedStreamId = parseStreamId(streamId);
+      let parsedStreamId = parseStreamId(streamId);
 
-      if (!value) {
-        let newId = parsedStreamId;
+      if (!streamValue) {
         if (parsedStreamId.count === '*') {
-          newId.count = parsedStreamId.timestamp === '0' ? '1' : '0';
+          parsedStreamId.count = parsedStreamId.timestamp === '0' ? '1' : '0';
         }
-        const stream: Stream = {
-          id: newId,
-          key: newStreamKey,
-          value: newStreamValue,
-        };
-        streamStore.set(key, [stream]);
-        setXADDResponse(setStreamIdToString(newId), connection);
+        // TODO: setStreamStore - check if I've already had such funct and refactor
+        const newStreamValue = setStreamValue(
+          parsedStreamId,
+          arrayOfKeysAndValues
+        );
+
+        streamStore.set(streamKey, newStreamValue);
+        setXADDResponse(setStreamIdToString(parsedStreamId), connection);
         break;
       }
 
       if (parsedStreamId.count === '*') {
-        let newId = parsedStreamId;
-        newId.count = '0';
+        parsedStreamId.count = '0';
 
-        for (let item of value) {
-          if (item.id.timestamp === newId.timestamp) {
-            newId.count = String(Number(item.id.count) + 1);
+        // increment id.count if there are some items with the same timestamp
+        for (let currentStreamId of streamValue.keys()) {
+          if (currentStreamId.timestamp === parsedStreamId.timestamp) {
+            parsedStreamId.count = String(Number(currentStreamId.count) + 1);
             break;
           }
         }
+        const newStreamValue = setStreamValue(
+          parsedStreamId,
+          arrayOfKeysAndValues
+        );
 
-        const stream: Stream = {
-          id: newId,
-          key: newStreamKey,
-          value: newStreamValue,
-        };
-
-        const updatedValue = [...value, stream];
-        streamStore.set(key, updatedValue);
-        setXADDResponse(setStreamIdToString(newId), connection);
+        const updatedValue = mergeMaps(streamValue, newStreamValue);
+        streamStore.set(streamKey, updatedValue);
+        setXADDResponse(setStreamIdToString(parsedStreamId), connection);
         break;
       }
 
@@ -285,20 +289,54 @@ export async function handleCommand(
         break;
       }
 
-      if (validateStreamId(parsedStreamId, value)) {
-        const stream: Stream = {
-          id: parsedStreamId,
-          key: newStreamKey,
-          value: newStreamValue,
-        };
-        // value.push(stream); //
-        const updatedValue = [...value, stream];
-        streamStore.set(key, updatedValue);
+      if (validateStreamId(parsedStreamId, streamValue)) {
+        const newStreamValue = setStreamValue(
+          parsedStreamId,
+          arrayOfKeysAndValues
+        );
+
+        const updatedValue = mergeMaps(streamValue, newStreamValue);
+        streamStore.set(streamKey, updatedValue);
         setXADDResponse(setStreamIdToString(parsedStreamId), connection);
         break;
       }
       const error = `-ERR The ID specified in XADD is equal or smaller than the target stream top item\r\n`;
       connection.write(error);
+      break;
+    }
+    case 'XRANGE': {
+      const [streamKey, startIndex, endIndex] = commandOptions;
+      const streamValueInRange = getStreamValuesByRange(
+        streamKey,
+        startIndex,
+        endIndex
+      );
+      if (!streamValueInRange) {
+        console.log('streamValueInRange ===', streamValueInRange);
+        throw Error(
+          `[XRANGE] no value by key ${streamKey} between ${startIndex} and ${endIndex}`
+        );
+      }
+      let response = '';
+      // const outerArrayString = Array.from(streamValueInRange.keys()).length;
+      const outerArrayString = streamValueInRange.size;
+      response = '*' + outerArrayString + escapeSymbols;
+      for (const [
+        streamId,
+        keyValuePairArray,
+      ] of streamValueInRange.entries()) {
+        let innerArray: string[] = [];
+
+        for (const keyValuePair of keyValuePairArray) {
+          innerArray.push(keyValuePair.key);
+          innerArray.push(String(keyValuePair.value));
+        }
+        const innerArrayString = setRESPArray(...innerArray);
+        response += setRESPArray(setStreamIdToString(streamId));
+        response += innerArrayString;
+      }
+      connection.write(response);
+
       break;
     }
     case 'TYPE': {

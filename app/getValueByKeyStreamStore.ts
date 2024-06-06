@@ -1,8 +1,10 @@
-import { streamStore, Stream } from './constants/streamStore';
+import { streamStore, StreamValue } from './constants/streamStore';
 
-export function getValueByKeyStreamStore(key: string): Stream[] | null {
-  console.log('[getValueByKey] key: ', key);
-  const data = streamStore.get(key);
+export function getValueByKeyStreamStore(
+  streamKey: string
+): StreamValue | null {
+  console.log('[getValueByKey] key: ', streamKey);
+  const data = streamStore.get(streamKey);
 
   if (!data) {
     console.log('[GET]: no value by this key');

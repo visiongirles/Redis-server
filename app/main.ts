@@ -3,7 +3,7 @@ import { setReplica } from './setReplica';
 import { setPort } from './setPort';
 import { parseBuffer } from './parseBuffer';
 import { handleCommand } from './handleCommand';
-import { clearBuffer } from './functions/clearBuffer';
+import { clearBuffer } from './utils/clearBuffer';
 import { handleHandshakeProcess } from './handleHandshakeProcess';
 import { setReplicaHandler } from './setReplicaHandler';
 import { setConfig } from './setConfig';

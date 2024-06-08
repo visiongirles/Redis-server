@@ -123,7 +123,8 @@ export function parseBuffer(buffer: Buffer): ParsedBuffer {
     case 'KEYS':
     case 'TYPE':
     case 'XADD':
-    case 'XRANGE': {
+    case 'XRANGE':
+    case 'XREAD': {
       if (!isCommandHasOptions(argumentsCount)) {
         console.log('Options parse result: ', isSuccess, command);
         return {

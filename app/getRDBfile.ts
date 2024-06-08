@@ -1,4 +1,4 @@
-import { clearBuffer } from './functions/clearBuffer';
+import { clearBuffer } from './utils/';
 
 export function getRDBfile(clientBuffer: Buffer): Buffer {
   if (clientBuffer[0] === '$'.charCodeAt(0)) {

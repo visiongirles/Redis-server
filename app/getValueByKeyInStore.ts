@@ -1,16 +1,16 @@
 import { StoreValue, store } from './constants/store';
 
-export function getValueByKeyStore(key: string): StoreValue | null {
+export function getValueByKeyInStore(key: string): StoreValue | null {
   console.log('[getValueByKey] key: ', key);
   const data = store.get(key);
-
+  console.log('Store: ', store);
   if (!data) {
     console.log('[GET]: no value by this key');
     return null;
   }
 
   const expiry = data.timeToLive;
-
+  console.log(`[getValueByKeyStore] key: '${key}' has expiry`, expiry);
   if (expiry) {
     const isExpired = expiry < Date.now();
 

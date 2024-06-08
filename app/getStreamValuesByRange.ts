@@ -1,6 +1,5 @@
-import { timeStamp } from 'console';
-import { StreamKey, StreamValue, streamStore } from './constants/streamStore';
-import { getValueByKeyStreamStore } from './getValueByKeyStreamStore';
+import { StreamId, StreamKey, StreamValue } from './constants/streamStore';
+import { getValueByKeyInStreamStore } from './getValueByKeyInStreamStore';
 import { parseStreamId } from './validateStreamId';
 
 // TODO: узнать что нудно возвращать если не нашли значений в range
@@ -9,68 +8,104 @@ export function getStreamValuesByRange(
   startIndex: string,
   endIndex: string
 ): StreamValue | null {
-  const steamValue = getValueByKeyStreamStore(streamKey);
+  const streamValue = getValueByKeyInStreamStore(streamKey);
 
-  if (!steamValue) {
+  if (!streamValue) {
     throw Error(`[getStreamValuesByRange] no value by key: ${streamKey}`);
   }
 
   const streamValueByRange: StreamValue = new Map();
-  console.log('[getStreamValuesByRange] current streamStore:', streamStore);
 
-  // const startIndexObject =
-  //   startIndex === '-'
-  //     ? { timestamp: '0', count: '0' }
-  //     : parseStreamId(startIndex);
-  // const endIndexObject = endIndex === '+' ? '' : parseStreamId(endIndex);
+  // TODO: unify two IFs into one
 
-  // timestamp + count
-  for (const streamId of steamValue.keys()) {
-    // console.log('endIndexObject: ', endIndexObject);
-    // console.log(
-    //   `streamId.timestamp: ${streamId.timestamp} , startIndex: ${startIndex}, endIndex: ${endIndex}`
-    // );
-
-    if (startIndex === '-') {
-      const endIndexObject = parseStreamId(endIndex);
-      if (Number(streamId.timestamp) <= Number(endIndexObject.timestamp)) {
-        if (Number(streamId.count) <= Number(endIndexObject.count)) {
-          const streamValueInRange = steamValue.get(streamId);
-          if (streamValueInRange) {
-            streamValueByRange.set(streamId, streamValueInRange);
-          }
-        }
+  for (const streamId of streamValue.keys()) {
+    if (
+      isOnlyHasEndIndex(startIndex) &&
+      isStreamIdWithinRangeByEndIndex(endIndex, streamId)
+    ) {
+      const streamValueInRange = streamValue.get(streamId);
+      if (streamValueInRange) {
+        streamValueByRange.set(streamId, streamValueInRange);
       }
-    } else if (endIndex === '+') {
-      const startIndexObject = parseStreamId(startIndex);
-      if (Number(streamId.timestamp) >= Number(startIndexObject.timestamp)) {
-        if (Number(streamId.count) >= Number(startIndexObject.count)) {
-          const streamValueInRange = steamValue.get(streamId);
-          if (streamValueInRange) {
-            streamValueByRange.set(streamId, streamValueInRange);
-          }
-        }
+    } else if (
+      isOnlyHasStartIndex(endIndex) &&
+      isStreamIdWithinRangeByStartIndex(startIndex, streamId)
+    ) {
+      const streamValueInRange = streamValue.get(streamId);
+      if (streamValueInRange) {
+        streamValueByRange.set(streamId, streamValueInRange);
       }
     } else {
-      const startIndexObject = parseStreamId(startIndex);
-      const endIndexObject = parseStreamId(endIndex);
-
-      if (
-        Number(streamId.timestamp) >= Number(startIndexObject.timestamp) &&
-        Number(streamId.timestamp) <= Number(endIndexObject.timestamp)
-      ) {
-        if (
-          Number(streamId.count) >= Number(startIndexObject.count) &&
-          Number(streamId.count) <= Number(endIndexObject.count)
-        ) {
-          const streamValueInRange = steamValue.get(streamId);
-          if (streamValueInRange) {
-            streamValueByRange.set(streamId, streamValueInRange);
-          }
+      if (isStreamIdWithinRangeByBothIndexes(startIndex, endIndex, streamId)) {
+        const streamValueInRange = streamValue.get(streamId);
+        if (streamValueInRange) {
+          streamValueByRange.set(streamId, streamValueInRange);
         }
       }
     }
   }
-  if (streamValueByRange.size === 0) return null;
+
+  if (isStreamValueByRangeEmpty(streamValueByRange)) return null;
+
   return streamValueByRange;
+}
+
+function isOnlyHasEndIndex(startIndex: string): boolean {
+  return startIndex === '-';
+}
+
+function isStreamIdWithinRangeByEndIndex(
+  endIndex: string,
+  streamId: StreamId
+): boolean {
+  const endIndexObject = parseStreamId(endIndex);
+  if (Number(streamId.timestamp) <= Number(endIndexObject.timestamp)) {
+    if (Number(streamId.count) <= Number(endIndexObject.count)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function isOnlyHasStartIndex(endIndex: string) {
+  return endIndex === '+';
+}
+
+function isStreamIdWithinRangeByStartIndex(
+  startIndex: string,
+  streamId: StreamId
+): boolean {
+  const startIndexObject = parseStreamId(startIndex);
+  if (Number(streamId.timestamp) >= Number(startIndexObject.timestamp)) {
+    if (Number(streamId.count) >= Number(startIndexObject.count)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function isStreamIdWithinRangeByBothIndexes(
+  startIndex: string,
+  endIndex: string,
+  streamId: StreamId
+): boolean {
+  const startIndexObject = parseStreamId(startIndex);
+  const endIndexObject = parseStreamId(endIndex);
+
+  if (
+    Number(streamId.timestamp) >= Number(startIndexObject.timestamp) &&
+    Number(streamId.timestamp) <= Number(endIndexObject.timestamp)
+  ) {
+    if (
+      Number(streamId.count) >= Number(startIndexObject.count) &&
+      Number(streamId.count) <= Number(endIndexObject.count)
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function isStreamValueByRangeEmpty(streamValueByRange: StreamValue) {
+  return streamValueByRange.size === 0;
 }

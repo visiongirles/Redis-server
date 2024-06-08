@@ -1,5 +1,5 @@
 import * as net from 'net';
-import { clearBuffer } from './functions/clearBuffer';
+import { clearBuffer } from './utils/';
 import { serverInfo } from './constants/config';
 import { handleCommand } from './handleCommand';
 import { parseBuffer } from './parseBuffer';

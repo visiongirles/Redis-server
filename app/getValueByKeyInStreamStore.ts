@@ -1,6 +1,6 @@
 import { streamStore, StreamValue } from './constants/streamStore';
 
-export function getValueByKeyStreamStore(
+export function getValueByKeyInStreamStore(
   streamKey: string
 ): StreamValue | null {
   console.log('[getValueByKey] key: ', streamKey);

@@ -1,5 +1,5 @@
 import * as net from 'net';
-import { writeAsync } from './functions/writeAsync';
+import { writeAsync } from './utils/writeAsync';
 
 export async function handleHandshakeProcess(slaveClient: net.Socket) {
   const ping = '*1\r\n$4\r\nPING\r\n';

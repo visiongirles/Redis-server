@@ -1,11 +1,13 @@
-import { bulkString, escapeSymbols } from './constants/constants';
+import * as net from 'net';
 
-export function setRDBfileResponse(): Buffer {
+import { bulkString, escapeSymbols } from '../constants/constants';
+
+export function setRDBfileResponse(connection: net.Socket) {
   const contentBase64 = `UkVESVMwMDEx+glyZWRpcy12ZXIFNy4yLjD6CnJlZGlzLWJpdHPAQPoFY3RpbWXCbQi8ZfoIdXNlZC1tZW3CsMQQAPoIYW9mLWJhc2XAAP/wbjv+wP9aog==`;
 
   const content = Buffer.from(contentBase64, 'base64');
   const start = Buffer.from(bulkString + content.length + escapeSymbols);
   const response = Buffer.concat([start, content]);
 
-  return response;
+  connection.write(response);
 }

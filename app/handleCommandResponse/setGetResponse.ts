@@ -3,11 +3,11 @@ import {
   bulkString,
   escapeSymbols,
   nullBulkString,
-} from './constants/constants';
-import { getValueByKeyStore } from './getValueByKeyStore';
+} from '../constants/constants';
+import { getValueByKeyInStore } from '../getValueByKeyInStore';
 
 export function setGetResponse(key: string, connection: net.Socket) {
-  const data = getValueByKeyStore(key);
+  const data = getValueByKeyInStore(key);
 
   if (data === null) {
     connection.write(nullBulkString);

@@ -8,10 +8,6 @@ export function parseBulkString(buffer: Buffer, offset: number): ReturnResult {
   const isSuccess = true;
 
   if (!isArgumentBulkString(buffer, offset)) {
-    // console.log(
-    //   '[Error]: excpected to receive $, but got: ',
-    //   buffer[offset].toString()
-    // );
     return [!isSuccess, '', offset];
   }
 

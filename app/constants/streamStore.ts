@@ -1,4 +1,3 @@
-// export const streamStore = new Map<string, Stream[]>();
 export const streamStore = new Map<StreamKey, StreamValue>();
 
 export type StreamValue = Map<StreamId, KeyValuePair[]>;
@@ -8,12 +7,6 @@ export interface KeyValuePair {
   key: string;
   value: any;
 }
-
-// export interface Stream {
-//   id: StreamId;
-//   key: string;
-//   value: any;
-// }
 
 export interface StreamId {
   timestamp: string;

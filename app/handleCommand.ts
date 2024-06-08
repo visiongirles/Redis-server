@@ -175,8 +175,9 @@ export async function handleCommand(
     }
     case 'XREAD': {
       // const reservedLeyWordStreams = commandOptions[0];
+      // setXReadResponse(commandOptions, connection);
       setXReadResponse(commandOptions, connection);
-
+      // connection.write(response);
       break;
     }
     case 'TYPE': {

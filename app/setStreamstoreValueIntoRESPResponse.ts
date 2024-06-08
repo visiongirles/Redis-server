@@ -8,6 +8,7 @@ export function setStreamstoreValueIntoRESPResponse(
   streamValueInRange: StreamValue,
   streamKey: string
 ): string {
+  // START OF STREAM KEY ARRAY
   const [streamIdBylkString, innerArrayBulkString] =
     getKeyValuePairsArray(streamValueInRange);
 
@@ -16,11 +17,16 @@ export function setStreamstoreValueIntoRESPResponse(
   const streamIdAndInnerArray = setArrayInResp(
     streamIdBylkString,
     innerArrayBulkString
-  );
-  const outterArray = setArrayInResp(streamIdAndInnerArray);
+  ); // key value pair of Map + streamID
+
+  const outterArray = setArrayInResp(streamIdAndInnerArray); // streamId level merge
+
   const keyStreamBulkString = setBulkStringinResp(streamKey);
-  const arrayOfStreams = setArrayInResp(keyStreamBulkString, outterArray);
-  return setArrayInResp(arrayOfStreams);
+
+  const arrayOfStreams = setArrayInResp(keyStreamBulkString, outterArray); // streamKey and otter array merge
+  // END OF STREAMKEY ARRAY
+  return arrayOfStreams;
+  // return setArrayInResp(arrayOfStreams);
 }
 
 function getKeyValuePairsArray(streamValueInRange: StreamValue): string[] {

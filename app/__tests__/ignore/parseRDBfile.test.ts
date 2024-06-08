@@ -1,4 +1,4 @@
-import { RDB, parseRDBfile } from '../parseRDBfile';
+import { RDB, parseRDBfile } from '../../parseRDBfile';
 import { describe, expect, test } from '@jest/globals';
 
 describe('Parse RDB file', () => {

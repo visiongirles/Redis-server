@@ -23,7 +23,7 @@ export function parseRDBfile(dir: string, dbfilename: string): RDB {
   //reads file
   // const contentBase64 = fs.readFileSync(filePath, 'utf8');
   const content = fs.readFileSync(filePath);
-  console.log('[parseRDBfile]: content: ', content);
+  // console.log('[parseRDBfile]: content: ', content);
 
   // const content = Buffer.from(contentBase64, 'base64');
 
@@ -31,12 +31,12 @@ export function parseRDBfile(dir: string, dbfilename: string): RDB {
   // get title
   const redis = content.subarray(offset, 5).toString();
   offset = redis.length;
-  console.log('[parseRDBfile]: redis: ', redis);
+  // console.log('[parseRDBfile]: redis: ', redis);
 
   //get version
   const RDBVersionNumber = Number(content.subarray(offset, offset + 4));
   offset += 4;
-  console.log('[parseRDBfile]: RDBVersionNumber: ', RDBVersionNumber);
+  // console.log('[parseRDBfile]: RDBVersionNumber: ', RDBVersionNumber);
 
   //get Auxiliary fields
   const faArray = new Map(); // TODO:
@@ -63,7 +63,7 @@ export function parseRDBfile(dir: string, dbfilename: string): RDB {
     }
     faArray.set(key, value);
   }
-  console.log('[parseRDBfile]: faArray: ', faArray);
+  // console.log('[parseRDBfile]: faArray: ', faArray);
 
   // get database selector
   if (content[offset] !== 0xfe) {
@@ -71,7 +71,7 @@ export function parseRDBfile(dir: string, dbfilename: string): RDB {
   }
   offset += 1;
   const databaseID = Number(content[offset]);
-  console.log('[parseRDBfile]: databaseID: ', databaseID);
+  // console.log('[parseRDBfile]: databaseID: ', databaseID);
 
   offset += 1;
 
@@ -84,7 +84,7 @@ export function parseRDBfile(dir: string, dbfilename: string): RDB {
     fb.sizeExpireHashTable = Number(content[offset]);
     offset += 1;
   }
-  console.log('[parseRDBfile]: fb: ', fb);
+  // console.log('[parseRDBfile]: fb: ', fb);
 
   // get ket-value for current db selector
   let store: Map<string, StoreValue> = new Map();
@@ -132,7 +132,7 @@ export function parseRDBfile(dir: string, dbfilename: string): RDB {
       type: StoreValueType.String,
     });
   }
-  console.log('[parseRDBfile]: store: ', store);
+  // console.log('[parseRDBfile]: store: ', store);
 
   // TODO: selector db сделать чтобы остальные бд тоже парсилась
   const rdb = new RDB(

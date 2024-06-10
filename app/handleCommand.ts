@@ -33,6 +33,8 @@ import {
 } from './handleCommandResponse';
 import { updateMasterServerOffset } from './updateMasterServerOffset';
 import { StreamId } from './constants/streamStore';
+import { checkStreamKeyInPromiseList } from './checkStreamKeyInPromiseList';
+import { streamPromise } from './constants/promiseStore';
 
 export async function handleCommand(
   data: Buffer,
@@ -123,6 +125,8 @@ export async function handleCommand(
 
         streamStore.set(streamKey, newStreamValue);
         setXaddResponse(setStreamIdToString(parsedStreamId), connection);
+        stepTwo(streamKey, commandOptions);
+
         break;
       }
 
@@ -144,6 +148,8 @@ export async function handleCommand(
         const updatedValue = mergeMaps(streamValue, newStreamValue);
         streamStore.set(streamKey, updatedValue);
         setXaddResponse(setStreamIdToString(parsedStreamId), connection);
+        stepTwo(streamKey, commandOptions);
+
         break;
       }
 
@@ -162,10 +168,16 @@ export async function handleCommand(
         const updatedValue = mergeMaps(streamValue, newStreamValue);
         streamStore.set(streamKey, updatedValue);
         setXaddResponse(setStreamIdToString(parsedStreamId), connection);
+        stepTwo(streamKey, commandOptions);
+
         break;
       }
       const error = `-ERR The ID specified in XADD is equal or smaller than the target stream top item\r\n`;
       connection.write(error);
+
+      // Step 2: Check promise list
+      stepTwo(streamKey, commandOptions);
+
       break;
     }
     case 'XRANGE': {
@@ -188,6 +200,19 @@ export async function handleCommand(
       console.log('[handleCommand] default case with command', command);
       connection.write('+OK' + escapeSymbols);
     }
+  }
+}
+
+function stepTwo(streamKey: string, commandOptions: string[]) {
+  console.log('streamPromise: ', streamPromise);
+  const promise = checkStreamKeyInPromiseList(streamKey);
+  if (promise !== undefined) {
+    console.log('[XADD] triggers promise: ', promise);
+    const value = ['streams', ...commandOptions.slice(0, 2)];
+    promise(value);
+    streamPromise.delete(streamKey);
+    // TODO: trigger promise resolution
+    // setXReadResponse(commandOptions, connection);
   }
 }
 

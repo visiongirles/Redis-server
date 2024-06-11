@@ -5,7 +5,6 @@ import { getStringSize } from './getStringSize';
 import { StoreValue, StoreValueType } from './constants/store';
 
 export function parseRDBfile(dir: string, dbfilename: string): RDB {
-  // export function parseRDBfile(contentBase64: string): RDB {
   const filePath = path.resolve(dir, dbfilename);
 
   if (!fs.existsSync(filePath))
@@ -17,29 +16,24 @@ export function parseRDBfile(dir: string, dbfilename: string): RDB {
       [],
       new Map<string, any>()
     );
+
   //checks read permission
   fs.accessSync(filePath, fs.constants.R_OK);
 
   //reads file
-  // const contentBase64 = fs.readFileSync(filePath, 'utf8');
   const content = fs.readFileSync(filePath);
-  // console.log('[parseRDBfile]: content: ', content);
-
-  // const content = Buffer.from(contentBase64, 'base64');
 
   let offset = 0;
   // get title
   const redis = content.subarray(offset, 5).toString();
   offset = redis.length;
-  // console.log('[parseRDBfile]: redis: ', redis);
 
   //get version
   const RDBVersionNumber = Number(content.subarray(offset, offset + 4));
   offset += 4;
-  // console.log('[parseRDBfile]: RDBVersionNumber: ', RDBVersionNumber);
 
   //get Auxiliary fields
-  const faArray = new Map(); // TODO:
+  const faArray = new Map();
 
   while (content[offset] == 0xfa) {
     offset += 1;
@@ -63,7 +57,6 @@ export function parseRDBfile(dir: string, dbfilename: string): RDB {
     }
     faArray.set(key, value);
   }
-  // console.log('[parseRDBfile]: faArray: ', faArray);
 
   // get database selector
   if (content[offset] !== 0xfe) {
@@ -71,7 +64,6 @@ export function parseRDBfile(dir: string, dbfilename: string): RDB {
   }
   offset += 1;
   const databaseID = Number(content[offset]);
-  // console.log('[parseRDBfile]: databaseID: ', databaseID);
 
   offset += 1;
 
@@ -84,7 +76,6 @@ export function parseRDBfile(dir: string, dbfilename: string): RDB {
     fb.sizeExpireHashTable = Number(content[offset]);
     offset += 1;
   }
-  // console.log('[parseRDBfile]: fb: ', fb);
 
   // get ket-value for current db selector
   let store: Map<string, StoreValue> = new Map();
@@ -95,14 +86,12 @@ export function parseRDBfile(dir: string, dbfilename: string): RDB {
       case 0xfc: {
         offset += 1;
         expiry = Number(content.readBigUInt64LE(offset));
-        console.log('0xfc offset + 8', expiry);
         offset += 8;
         break;
       }
       case 0xfd: {
         offset += 1;
         expiry = Number(content.readUInt32LE(offset)) * 1000;
-        console.log('0xfd offset + 4', expiry);
         offset += 4;
         break;
       }
@@ -132,9 +121,7 @@ export function parseRDBfile(dir: string, dbfilename: string): RDB {
       type: StoreValueType.String,
     });
   }
-  // console.log('[parseRDBfile]: store: ', store);
 
-  // TODO: selector db сделать чтобы остальные бд тоже парсилась
   const rdb = new RDB(
     redis,
     RDBVersionNumber,
@@ -145,6 +132,7 @@ export function parseRDBfile(dir: string, dbfilename: string): RDB {
   );
   return rdb;
 }
+
 export class RDB {
   title: string;
   RDBversionNumber: number;
@@ -163,7 +151,7 @@ export class RDB {
   ) {
     this.title = title;
     this.RDBversionNumber = RDBversionNumber;
-    this.fa = fa; // TODO: ?! копировать через .map метод
+    this.fa = fa;
     this.databaseID = databaseID;
     this.fb = fb;
     this.store = store;

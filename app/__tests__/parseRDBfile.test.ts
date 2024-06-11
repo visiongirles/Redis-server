@@ -1,5 +1,5 @@
-import { RDB, parseRDBfile } from '../../parseRDBfile';
 import { describe, expect, test } from '@jest/globals';
+import { RDB, parseRDBfile } from '../parseRDBfile';
 
 describe('Parse RDB file', () => {
   // const content = `UkVESVMwMDAz+glyZWRpcy12ZXIFNy4yLjD6CnJlZGlzLWJpdHPAQP4A+wEAAAVhcHBsZQlyYXNwYmVycnn/Hhm5WA645E0K`;
@@ -19,7 +19,6 @@ describe('Parse RDB file', () => {
   const success = new RDB('REDIS', 3, fa, 0, [4, 0], store);
 
   test(`Parse RDB file`, () => {
-    // expect(parseRDBfile(content)).toStrictEqual(success);
     expect(parseRDBfile(dir, filenamedb)).toStrictEqual(success);
   });
 });

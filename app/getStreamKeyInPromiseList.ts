@@ -1,5 +1,5 @@
 import { streamPromise } from './constants/promiseStore';
 
-export function checkStreamKeyInPromiseList(streamKey: string) {
+export function getStreamKeyInPromiseList(streamKey: string) {
   return streamPromise.get(streamKey);
 }

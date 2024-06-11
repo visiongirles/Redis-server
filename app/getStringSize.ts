@@ -17,11 +17,8 @@ export function getStringSize(
       return { stringSize: stringLength, size: 1 };
     }
     case 1: {
-      // 0100000001010101 потеряем если будет больше 53х бит а у нас пока 14
-      // TODO: little Endian? или не надо, т.к. два бита зануляются
       const nextByte = content[offset + 1];
       stringLength = (nextByte << 8) | (currentByte & 63);
-      // stringLength = ((currentByte & 0b00111111) << 8) | nextByte;
       return { stringSize: stringLength, size: 2 };
     }
     case 2: {
@@ -34,7 +31,6 @@ export function getStringSize(
     }
     case 3: {
       return { stringSize: -1, size: 2 };
-      // throw Error('[case 0x11]: has not been implemented yet');
     }
 
     default:

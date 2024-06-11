@@ -7,8 +7,6 @@ export function setTypeResponse(
   commandOptions: string[],
   connection: net.Socket
 ) {
-  console.log('[handleCommand TYPE] key:', commandOptions[0]);
-
   const stream = getValueByKeyInStreamStore(commandOptions[0]);
 
   if (stream) {
@@ -18,7 +16,6 @@ export function setTypeResponse(
 
   const value = getValueByKeyInStore(commandOptions[0]);
   if (value) {
-    console.log('[GET] chceking the value:', value);
     switch (value.type) {
       case StoreValueType.String: {
         connection.write('+string\r\n');

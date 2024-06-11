@@ -13,13 +13,7 @@ export const setReplicaHandler = (replica: net.Socket) => {
     replicaBuffer = getRDBfile(replicaBuffer);
 
     while (replicaBuffer.length > 0) {
-      console.log(
-        '[Replica buffer]: ',
-        replicaBuffer.toString().replace('\r\n', '\\r\\n')
-      );
-
       const result = parseBuffer(replicaBuffer);
-      console.log('[Replica parse result]: ', result);
       const isSuccess: boolean = result.isSuccess;
       if (!isSuccess) break;
 

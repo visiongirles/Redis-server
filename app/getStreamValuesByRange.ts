@@ -2,7 +2,6 @@ import { StreamId, StreamKey, StreamValue } from './constants/streamStore';
 import { getValueByKeyInStreamStore } from './getValueByKeyInStreamStore';
 import { parseStreamId } from './validateStreamId';
 
-// TODO: узнать что нудно возвращать если не нашли значений в range
 export function getStreamValuesByRange(
   streamKey: StreamKey,
   startIndex: string,
@@ -15,8 +14,6 @@ export function getStreamValuesByRange(
   }
 
   const streamValueByRange: StreamValue = new Map();
-
-  // TODO: unify two IFs into one
 
   for (const streamId of streamValue.keys()) {
     if (

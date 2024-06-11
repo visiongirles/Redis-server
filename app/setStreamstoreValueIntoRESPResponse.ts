@@ -12,8 +12,6 @@ export function setStreamstoreValueIntoRESPResponse(
   const [streamIdBylkString, innerArrayBulkString] =
     getKeyValuePairsArray(streamValueInRange);
 
-  // response += innerArrayString;
-
   const streamIdAndInnerArray = setArrayInResp(
     streamIdBylkString,
     innerArrayBulkString
@@ -26,7 +24,6 @@ export function setStreamstoreValueIntoRESPResponse(
   const arrayOfStreams = setArrayInResp(keyStreamBulkString, outterArray); // streamKey and otter array merge
   // END OF STREAMKEY ARRAY
   return arrayOfStreams;
-  // return setArrayInResp(arrayOfStreams);
 }
 
 function getKeyValuePairsArray(streamValueInRange: StreamValue): string[] {

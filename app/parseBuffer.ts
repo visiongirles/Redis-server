@@ -67,46 +67,31 @@ export function parseBuffer(buffer: Buffer): ParsedBuffer {
   let offset = 0;
 
   if (!isFirstArgumentArray(buffer)) {
-    console.log(
-      '[parseBuffer] isFirstArgumentArray is NOT array: isSuccess = false'
-    );
     return parsedBufferFailure;
   }
 
   const indexArgumentCountEnd = buffer.indexOf(escapeSymbols);
   if (indexArgumentCountEnd === -1) {
-    console.log('[parseBuffer] indexArgumentCountEnd is -1: isSuccess = false');
-
     return parsedBufferFailure;
   }
-
-  // console.log('indexArgumentCountEnd: ', indexArgumentCountEnd);
 
   let argumentsCount = Number(
     buffer.subarray(1, indexArgumentCountEnd).toString()
   );
   offset = indexArgumentCountEnd + escapeSymbols.length;
 
-  // console.log('argumentsCount: ', argumentsCount);
-
   if (offset >= buffer.length) {
-    console.log('[parseBuffer] offset >= buffer.length: isSuccess = false');
-
     return parsedBufferFailure;
   }
 
   // Parse the command
-
   const commandParseResult = parseBulkString(buffer, offset);
   const isSuccessResult = commandParseResult[indexOfSucess];
   const command = commandParseResult[indexOfBulkString].toUpperCase();
-  console.log('[parseBuffer] command', command);
   offset = commandParseResult[indexOfOffset];
   argumentsCount--;
 
   if (!isSuccessResult) {
-    console.log('[commandParseResult] cannot find command: isSuccess = false');
-
     return parsedBufferFailure;
   }
 
@@ -126,7 +111,6 @@ export function parseBuffer(buffer: Buffer): ParsedBuffer {
     case 'XRANGE':
     case 'XREAD': {
       if (!isCommandHasOptions(argumentsCount)) {
-        console.log('Options parse result: ', isSuccess, command);
         return {
           isSuccess,
           command,
@@ -139,10 +123,7 @@ export function parseBuffer(buffer: Buffer): ParsedBuffer {
       const isSuccessResult = optionsParseResult.isSucess;
       const options = optionsParseResult.options;
       offset = optionsParseResult.offset;
-      // console.log('Options parse result: ', isSuccessResult);
       if (!isSuccessResult) {
-        console.log('Options parse result: ', isSuccess, command);
-
         return parsedBufferFailure;
       }
       return {

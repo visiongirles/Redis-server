@@ -24,8 +24,6 @@ export function setSetResponse(
       const timeToLive = Date.now() + expiry;
 
       storeValue.timeToLive = timeToLive;
-      console.log('storeValue: ', storeValue);
-      console.log('storeValue.timeToLive: ', storeValue.timeToLive);
     }
   }
   setKeyValueToStore(key, storeValue);

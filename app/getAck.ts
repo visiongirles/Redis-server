@@ -10,9 +10,7 @@ export function getAck(
     replica.write(data);
 
     const promise: Promise<Buffer> = new Promise((resolve, reject) => {
-      // console.log('Stage #1 Promise');
       function onData(data: Buffer) {
-        // console.log('Stage #2 in on data event Promise');
         resolve(data);
         clearTimeout(timeoutId);
         replica.removeListener('data', onData);
@@ -32,7 +30,6 @@ export function getAck(
     });
 
     promises.push(promise);
-    // console.log('[propagateCommandToReplicas]: ', replica);
   });
   return Promise.all(promises);
 }

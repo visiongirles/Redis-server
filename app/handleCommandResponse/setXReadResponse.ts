@@ -29,15 +29,12 @@ export async function setXReadResponse(
     }
     case 'streams': {
       const keyStreamCount = (commandOptions.length - 1) / 2;
-      console.log(`[setXReadResponse]: keyStreamCount`, keyStreamCount);
 
       let streamValueInRangeArray = [];
-      console.log(`[setXReadResponse]: commandOptions`, commandOptions);
       for (let index = 0; index < keyStreamCount; index++) {
         const streamKey = commandOptions[index + 1];
         const startIndex = commandOptions[keyStreamCount + index + 1];
         const endIndex = '+';
-        console.log(`[setXReadResponse]: startIndex`, startIndex);
 
         const streamValueInRange = getStreamValuesByRange(
           streamKey,
@@ -45,7 +42,6 @@ export async function setXReadResponse(
           endIndex
         );
         if (!streamValueInRange) {
-          console.log('streamValueInRange ===', streamValueInRange);
           throw Error(
             `[XREAD] no value by key ${streamKey} between ${startIndex} and ${endIndex}`
           );
@@ -55,12 +51,10 @@ export async function setXReadResponse(
           streamKey
         );
         streamValueInRangeArray.push(arrayOfStreams);
-        console.log(`[setXReadResponse] arrayOfStreams : `, arrayOfStreams);
       }
 
       const response = setArrayInResp(...streamValueInRangeArray);
 
-      console.log(`[XREAD]: response: `, response.replaceAll('\r\n', '\\r\\n'));
       connection.write(response);
       break;
     }

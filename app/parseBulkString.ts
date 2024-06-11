@@ -16,8 +16,6 @@ export function parseBulkString(buffer: Buffer, offset: number): ReturnResult {
   const indexBulkStringSizeEnd = buffer.indexOf(escapeSymbols, offset);
 
   if (indexBulkStringSizeEnd === -1) {
-    console.log("[Error]: haven't found \\r\\n");
-
     return [!isSuccess, '', offset];
   }
 
@@ -28,13 +26,6 @@ export function parseBulkString(buffer: Buffer, offset: number): ReturnResult {
   offset = indexBulkStringSizeEnd + escapeSymbols.length;
 
   if (offset + bulkStringSize + escapeSymbols.length > buffer.length) {
-    console.log('[Error]: not enough data in buffer');
-    console.log(
-      'EXPECTED buffer size: ',
-      offset + bulkStringSize + escapeSymbols.length
-    );
-    console.log('REAL buffer size: ', buffer.length);
-
     return [!isSuccess, '', offset];
   }
 

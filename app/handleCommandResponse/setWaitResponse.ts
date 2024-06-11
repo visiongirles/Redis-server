@@ -23,7 +23,6 @@ export async function setWaitResponse(
         ? replicasList.size
         : numberOfAliveReplicas.length;
 
-    console.log(`Active replicas count: `, numberOfAliveReplicas.length);
     connection.write(`:${response}` + escapeSymbols);
   } catch (error) {
     console.log('[ERROR from WAIT getAck()]: ', error);

@@ -13,7 +13,6 @@ export function setReplconfResponse(
         serverInfo.master_repl_offset.toString().length
       }\r\n${serverInfo.master_repl_offset}\r\n`;
       connection.write(response);
-      console.log(`[GETACK response: ]`, response);
       break;
     }
     case 'listening-port':
@@ -23,7 +22,6 @@ export function setReplconfResponse(
     }
     default: {
       console.log('[setReplconfResponse] Default should stay empty');
-      //   throw Error("[Reploconf] default hasn't been implemented");
     }
   }
 }

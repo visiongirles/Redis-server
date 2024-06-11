@@ -1,5 +1,5 @@
 import { describe, expect, test } from '@jest/globals';
-import { setRESPArray } from '../../setRESPArray';
+import { setRESPArray } from '../setRESPArray';
 
 describe('Set RESP Array from 2 strings', () => {
   const sucess = `*2\r\n$5\r\nhello\r\n$3\r\ncat\r\n`;

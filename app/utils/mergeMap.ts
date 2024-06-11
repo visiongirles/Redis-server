@@ -1,4 +1,4 @@
-import { KeyValuePair, StreamId } from './constants/streamStore';
+import { KeyValuePair, StreamId } from '../constants/streamStore';
 
 export function mergeMaps(
   currentMap: Map<StreamId, KeyValuePair[]>,
@@ -6,12 +6,12 @@ export function mergeMaps(
 ) {
   const mergedMap = new Map();
 
-  // Добавляем значения из первой Map
+  // Add values from first Map
   for (const [key, value] of currentMap) {
     mergedMap.set(key, value);
   }
 
-  // Добавляем значения из второй Map
+  // Add values from second Map
   for (const [key, value] of newMap) {
     mergedMap.set(key, value);
   }

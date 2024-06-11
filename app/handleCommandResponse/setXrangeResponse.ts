@@ -15,7 +15,6 @@ export function setXrangeResponse(
     endIndex
   );
   if (!streamValueInRange) {
-    console.log('streamValueInRange ===', streamValueInRange);
     throw Error(
       `[XRANGE] no value by key ${streamKey} between ${startIndex} and ${endIndex}`
     );

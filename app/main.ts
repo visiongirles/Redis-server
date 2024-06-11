@@ -24,33 +24,16 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
       const result = parseBuffer(buffer);
 
       const isSuccess: boolean = result.isSuccess;
-      console.log('[parseBuffer] isSucess', isSuccess);
-      console.log(
-        '[Buffer AFTER parsing]:',
-        buffer.toString().replaceAll('\r\n', ' ')
-      );
+
       if (!isSuccess) break;
 
       const commandOptions: string[] = result.options;
       const command = result.command.toLocaleUpperCase();
-      console.log('[main.ts] command', command);
       const offset = result.offset;
-
       const dataForReplica = buffer.subarray(0, offset);
 
-      console.log(
-        '[Master Buffer]: ',
-        buffer.toString().replaceAll('\r\n', '\\r\\n')
-      );
-      console.log(
-        '[data for replica]: ',
-        dataForReplica.toString().replaceAll('\r\n', '\\r\\n')
-      );
       handleCommand(dataForReplica, command, commandOptions, connection);
-      // serverInfo.master_repl_offset += offset;
       buffer = clearBuffer(buffer, offset);
-
-      console.log("End of 'data' event");
     }
 
     // }
@@ -64,10 +47,8 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
 server.listen(setPort(), '127.0.0.1');
 
 server.on('listening', async () => {
-  // console.log('connection from Listening event: ', connection);
   console.log('Server is running');
 
-  // console.log(bufferForTestInBytes);
   const replica = setReplica();
   if (replica !== null) {
     await handleHandshakeProcess(replica);

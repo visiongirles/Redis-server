@@ -10,20 +10,14 @@ export async function handleHandshakeProcess(slaveClient: net.Socket) {
   const psync = `*3\r\n$5\r\nPSYNC\r\n$1\r\n?\r\n$2\r\n-1\r\n`;
 
   try {
-    const replyToPing = await writeAsync(ping, slaveClient);
-    console.log('[replyToPing]: ', replyToPing.toString());
+    await writeAsync(ping, slaveClient);
 
-    const replyToConfigPartOne = await writeAsync(
-      replicaConfigFirst,
-      slaveClient
-    );
-    console.log('[replyToConfigPartOne]: ', replyToConfigPartOne.toString());
-    const replyToConfigPartTwo = await writeAsync(
-      replicaConfigSecond,
-      slaveClient
-    );
-    console.log('[replyToConfigPartTwo]: ', replyToConfigPartTwo.toString());
+    await writeAsync(replicaConfigFirst, slaveClient);
+
+    await writeAsync(replicaConfigSecond, slaveClient);
 
     await writeAsync(psync, slaveClient);
-  } catch (error) {}
+  } catch (error) {
+    throw Error(`[handleHandshakeProcess] got error: ${error}`);
+  }
 }

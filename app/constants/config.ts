@@ -13,7 +13,7 @@ export const serverInfo = {
 interface Config {
   dir: string;
   dbfilename: string;
-  [key: string]: string; // Индексная сигнатура
+  [key: string]: string;
 }
 
 export const configPath: Config = {

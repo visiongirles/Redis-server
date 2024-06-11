@@ -1,10 +1,3 @@
-// export const store: Map<string, storeValue> = new Map();
-
-// export const store: Store = {
-//   lastStreamEntry: null,
-//   entries: new Map(),
-// };
-
 export const store = new Map<string, StoreValue>();
 
 export interface StoreValue {

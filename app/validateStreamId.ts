@@ -29,7 +29,6 @@ export function isStreamIdEqualsDefault(streamId: StreamId): boolean {
     Number(streamId.timestamp) === defaultId.timeInMs &&
     Number(streamId.count) === defaultId.count
   ) {
-    console.log('[validateStreamId] id equals default values 0-0');
     return true;
   }
   return false;
